@@ -1,20 +1,20 @@
 #!/bin/bash
 
 FILES="
-./array88/main.c
-./display/main.c
-./lcd_test/main.c
+./examples/array88/main.c
+./examples/display/main.c
+./examples/lcd_test/main.c
+./include/array88.h
+./include/delay.h
+./include/display.h
+./include/lcd.h
+./include/scroll.h
+./include/hw.h
 ./lib/array88.c
-./lib/array88.h
 ./lib/delay.c
-./lib/delay.h
 ./lib/display.c
-./lib/display.h
 ./lib/lcd.c
-./lib/lcd.h
 ./lib/scroll.c
-./lib/scroll.h
-./lib/hw.h
 "
 
 for f in $FILES; do
