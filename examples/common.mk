@@ -34,7 +34,9 @@ all: $(OBJS)
 
 .PHONY: clean
 clean:
-	-rm $(TARGET).*
+	-rm $(TARGET).lk
+	-rm $(TARGET).map
+	-rm $(TARGET).noi
 	-rm *.rel
 	-rm *.lst
 	-rm *.sym

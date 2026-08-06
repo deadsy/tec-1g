@@ -82,6 +82,8 @@ void lcd_bitmap(uint8_t code, uint8_t *bitmap) {
 	for (uint8_t i = 0; i < 8; i++) {
 		wr_data(bitmap[i]);
 	}
+	// back to ddram access
+	wr_command(cmdHome);
 }
 
 //-----------------------------------------------------------------------------

@@ -11,11 +11,15 @@ FILES="
 ./include/lcd.h
 ./include/scroll.h
 ./include/hw.h
+./include/menu.h
+./include/keypad.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
 ./lib/lcd.c
 ./lib/scroll.c
+./lib/menu.c
+./lib/keypad.c
 "
 
 for f in $FILES; do

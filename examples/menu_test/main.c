@@ -21,7 +21,8 @@ static const struct menu_item menu0[] = {
 	MENU_EOL,
 };
 
-static void sub_menu0(void) {
+static void sub_menu0(struct menu *m) {
+	menu_forward(m, menu0);
 }
 
 //-----------------------------------------------------------------------------
@@ -33,7 +34,8 @@ static const struct menu_item menu8[] = {
 	MENU_EOL,
 };
 
-static void sub_menu8(void) {
+static void sub_menu8(struct menu *m) {
+	menu_forward(m, menu8);
 }
 
 //-----------------------------------------------------------------------------
@@ -57,44 +59,13 @@ static const struct menu_item root_items[] = {
 int main(void) {
 
 	lcd_init();
-	menu_init();
-
-	lcd_clear();
 	lcd_display_ctrl(true);
 
-	struct menu_list root_menu = {
-		.items = root_items,
-		.last = menu_length(root_items) - 1,
-		.index = 0,
-		.start = 0,
-		.end = 3,
-	};
+	struct menu m;
+	menu_init(&m, 4, 20, root_items);
+	menu_run(&m);
 
-	struct menu root = {
-		.list = &root_menu,
-		.clear = lcd_clear,
-		.puts = lcd_puts,
-		.rows = 4,
-		.cols = 20,
-	};
-
-	menu_down(&root);
-	menu_down(&root);
-	menu_down(&root);
-	menu_down(&root);
-	menu_down(&root);
-	menu_down(&root);
-
-	menu_up(&root);
-	menu_up(&root);
-	menu_up(&root);
-	menu_up(&root);
-
-	menu_render(&root);
-
-	while (1) {
-	}
-
+	return 0;
 }
 
 //-----------------------------------------------------------------------------
