@@ -38,4 +38,8 @@ uint8_t key_code(void) {
 	return current_code;
 }
 
+void key_init(void) {
+	current_code = key_scan();
+}
+
 //-----------------------------------------------------------------------------

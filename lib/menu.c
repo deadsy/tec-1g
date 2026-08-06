@@ -13,13 +13,19 @@ LCD Menu System
 #include "keypad.h"
 
 //-----------------------------------------------------------------------------
+
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+//-----------------------------------------------------------------------------
 // marker characters
 
 static const uint8_t up_arrow[] = { 0x04, 0x0E, 0x15, 0x04, 0x04, 0x04, 0x04, 0x00 };
 static const uint8_t down_arrow[] = { 0x00, 0x04, 0x04, 0x04, 0x04, 0x15, 0x0E, 0x04 };
+static const uint8_t ellipsis[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0x00 };
 
 #define UP_ARROW 0x05		// custom
 #define DOWN_ARROW 0x06		// custom
+#define ELLIPSIS 0x07		// custom
 #define SELECT_ARROW 0x7e	// standard
 
 //-----------------------------------------------------------------------------
@@ -58,17 +64,12 @@ static void menu_up(struct menu *m) {
 	}
 }
 
-//-----------------------------------------------------------------------------
-
 // move forward in the menu
-void menu_forward(struct menu *m, struct menu_item *items) {
-	(void)m;
-	(void)items;
-}
-
-// move backwards in the menu
-static void menu_back(struct menu *m) {
-	(void)m;
+static void menu_forward(struct menu *m) {
+	// call the menu item function
+	if (m->items[m->index].func != NULL) {
+		m->items[m->index].func(m);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -102,6 +103,21 @@ static void menu_render(struct menu *m) {
 
 //-----------------------------------------------------------------------------
 
+// setup the menu with a menu item list
+void menu_setup(struct menu *m, uint8_t rows, uint8_t cols, struct menu_item *items) {
+	// setup the menu
+	uint8_t n = menu_length(items) - 1;
+	m->items = items;
+	m->rows = rows;
+	m->cols = cols;
+	m->last = n;
+	m->index = 0;
+	m->start = 0;
+	m->end = MIN(rows - 1, n);
+}
+
+//-----------------------------------------------------------------------------
+
 void menu_run(struct menu *m) {
 	menu_render(m);
 	while (1) {
@@ -117,6 +133,13 @@ void menu_run(struct menu *m) {
 				menu_up(m);
 				break;
 			}
+		case KEYPAD_Go:{
+				menu_forward(m);
+				break;
+			}
+		case KEYPAD_Address:{
+				return;
+			}
 		default:{
 				break;
 			}
@@ -128,21 +151,11 @@ void menu_run(struct menu *m) {
 //-----------------------------------------------------------------------------
 
 // initialise the menu
-void menu_init(struct menu *m, uint8_t rows, uint8_t cols, struct menu_item *items) {
-
+void menu_init(void) {
 	// setup the lcd
 	lcd_bitmap(UP_ARROW, up_arrow);
 	lcd_bitmap(DOWN_ARROW, down_arrow);
-
-	// setup the menu
-	m->prev = NULL;		// no previous menu
-	m->items = items;
-	m->rows = rows;
-	m->cols = cols;
-	m->last = menu_length(items) - 1;
-	m->index = 0;
-	m->start = 0;
-	m->end = rows - 1;
+	lcd_bitmap(ELLIPSIS, ellipsis);
 }
 
 //-----------------------------------------------------------------------------

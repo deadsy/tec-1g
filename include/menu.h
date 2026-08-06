@@ -38,12 +38,8 @@ struct menu {
 
 //-----------------------------------------------------------------------------
 
-//void menu_down(struct menu *m);
-//void menu_up(struct menu *m);
-void menu_forward(struct menu *m, struct menu_item *items);
-//void menu_back(struct menu *m);
-
-void menu_init(struct menu *m, uint8_t rows, uint8_t cols, struct menu_item *items);
+void menu_init(void);
+void menu_setup(struct menu *m, uint8_t rows, uint8_t cols, struct menu_item *items);
 void menu_run(struct menu *m);
 
 //-----------------------------------------------------------------------------

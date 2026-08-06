@@ -44,6 +44,7 @@ Keypad (74c923) Driver
 
 bool key_down(void);
 uint8_t key_code(void);
+void key_init(void);
 
 //-----------------------------------------------------------------------------
 
