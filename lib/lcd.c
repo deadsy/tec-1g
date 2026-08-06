@@ -63,8 +63,6 @@ static void wr_data(uint8_t val) {
 	while ((lcdCmdPort & BUSYFLAG) != 0) ;
 }
 
-//-----------------------------------------------------------------------------
-
 static const uint8_t row2address[4] = { 0, 0x40, 0x14, 0x54 };
 
 static void cursor_set(uint8_t row, uint8_t col) {
@@ -74,12 +72,26 @@ static void cursor_set(uint8_t row, uint8_t col) {
 
 //-----------------------------------------------------------------------------
 
+// program a bitmap to the lcd cgram
+void lcd_bitmap(uint8_t code, uint8_t *bitmap) {
+	// codes are 0..7
+	code &= 7;
+	// write the cgram address
+	wr_command(cmdSetCgramAddr | (code << 3));
+	// write the bitmap
+	for (uint8_t i = 0; i < 8; i++) {
+		wr_data(bitmap[i]);
+	}
+}
+
+//-----------------------------------------------------------------------------
+
 static inline bool valid_posn(uint8_t row, uint8_t col) {
 	return (row < MAX_ROWS) && (col < MAX_COLS);
 }
 
 // display a string at the row/col location.
-void lcd_string(uint8_t row, uint8_t col, const char *s) {
+void lcd_puts(uint8_t row, uint8_t col, const char *s) {
 	if (!valid_posn(row, col)) {
 		return;
 	}
@@ -92,7 +104,7 @@ void lcd_string(uint8_t row, uint8_t col, const char *s) {
 }
 
 // display a character at the row/col location.
-void lcd_char(uint8_t row, uint8_t col, char c) {
+void lcd_putc(uint8_t row, uint8_t col, char c) {
 	if (!valid_posn(row, col)) {
 		return;
 	}
@@ -101,6 +113,11 @@ void lcd_char(uint8_t row, uint8_t col, char c) {
 }
 
 //-----------------------------------------------------------------------------
+
+// clear the lcd
+void lcd_clear(void) {
+	wr_command(cmdClear);
+}
 
 // display control - on/off.
 void lcd_display_ctrl(bool on) {

@@ -4,6 +4,7 @@ FILES="
 ./examples/array88/main.c
 ./examples/display/main.c
 ./examples/lcd_test/main.c
+./examples/menu_test/main.c
 ./include/array88.h
 ./include/delay.h
 ./include/display.h

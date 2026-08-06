@@ -6,6 +6,7 @@ OBJS = array88.rel \
 	display.rel \
 	lcd.rel \
 	scroll.rel \
+	menu.rel \
 	delay.rel
 
 CFLAGS = -mz80 \

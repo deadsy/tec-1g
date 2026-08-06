@@ -19,8 +19,10 @@ Character LCD Driver (hd44780)
 void lcd_init(void);
 void lcd_display_ctrl(bool on);
 void lcd_cursor_ctrl(bool on, bool blink);
-void lcd_char(uint8_t row, uint8_t col, char c);
-void lcd_string(uint8_t row, uint8_t col, const char *s);
+void lcd_clear(void);
+void lcd_bitmap(uint8_t code, uint8_t * bitmap);
+void lcd_putc(uint8_t row, uint8_t col, char c);
+void lcd_puts(uint8_t row, uint8_t col, const char *s);
 
 //-----------------------------------------------------------------------------
 

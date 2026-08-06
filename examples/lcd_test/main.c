@@ -18,7 +18,7 @@ LCD Test Code
 static const char msg[] = "This is a scrolled message!                 ";
 
 static void scroll_puts(const char *s) {
-	lcd_string(3, 0, s);
+	lcd_puts(3, 0, s);
 }
 
 int main(void) {
@@ -36,13 +36,13 @@ int main(void) {
 	lcd_init();
 	lcd_display_ctrl(true);
 
-	lcd_char(0, 0, 'A');
-	lcd_char(1, 0, 'B');
-	lcd_char(2, 0, 'C');
+	lcd_putc(0, 0, 'A');
+	lcd_putc(1, 0, 'B');
+	lcd_putc(2, 0, 'C');
 
-	lcd_char(0, 10, '0');
-	lcd_char(1, 10, '1');
-	lcd_char(2, 10, '2');
+	lcd_putc(0, 10, '0');
+	lcd_putc(1, 10, '1');
+	lcd_putc(2, 10, '2');
 
 	scroll_output(&s, buf);
 
