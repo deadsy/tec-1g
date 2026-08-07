@@ -12,13 +12,35 @@ Menu Test Code
 #include "lcd.h"
 #include "menu.h"
 #include "keypad.h"
+#include "delay.h"
 
 //-----------------------------------------------------------------------------
 
+static void leaf_item0_0(struct menu *m) {
+	(void)m;
+	lcd_clear();
+	lcd_puts(0, 0, "this is leaf 0.0");
+	delay_1s();
+}
+
+static void leaf_item0_1(struct menu *m) {
+	(void)m;
+	lcd_clear();
+	lcd_puts(0, 0, "this is leaf 0.1");
+	delay_1s();
+}
+
+static void leaf_item0_2(struct menu *m) {
+	(void)m;
+	lcd_clear();
+	lcd_puts(0, 0, "this is leaf 0.2");
+	delay_1s();
+}
+
 static const struct menu_item menu0[] = {
-	{"item 0.0", NULL},
-	{"item 0.1", NULL},
-	{"item 0.2", NULL},
+	{"item 0.0", leaf_item0_0},
+	{"item 0.1", leaf_item0_1},
+	{"item 0.2", leaf_item0_2},
 	MENU_EOL,
 };
 
@@ -84,7 +106,7 @@ int main(void) {
 	lcd_display_ctrl(true);
 
 	struct menu m;
-	menu_setup(&m, 4, 20, root_items);
+	menu_setup(&m, LCD_ROWS, LCD_COLS, root_items);
 	while (1) {
 		menu_run(&m);
 	}

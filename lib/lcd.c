@@ -11,11 +11,6 @@ Character LCD Driver (hd44780)
 #include "delay.h"
 
 //-----------------------------------------------------------------------------
-
-#define MAX_ROWS 4
-#define MAX_COLS 20
-
-//-----------------------------------------------------------------------------
 // hd44780 commands
 
 #define	cmdClear 0x01
@@ -89,7 +84,7 @@ void lcd_bitmap(uint8_t code, uint8_t *bitmap) {
 //-----------------------------------------------------------------------------
 
 static inline bool valid_posn(uint8_t row, uint8_t col) {
-	return (row < MAX_ROWS) && (col < MAX_COLS);
+	return (row < LCD_ROWS) && (col < LCD_COLS);
 }
 
 // display a string at the row/col location.
@@ -98,7 +93,7 @@ void lcd_puts(uint8_t row, uint8_t col, const char *s) {
 		return;
 	}
 	cursor_set(row, col);
-	while ((*s != 0) && (col < MAX_COLS)) {
+	while ((*s != 0) && (col < LCD_COLS)) {
 		wr_data(*s);
 		s++;
 		col++;

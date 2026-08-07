@@ -16,6 +16,11 @@ Character LCD Driver (hd44780)
 
 //-----------------------------------------------------------------------------
 
+#define LCD_ROWS 4
+#define LCD_COLS 20
+
+//-----------------------------------------------------------------------------
+
 void lcd_init(void);
 void lcd_display_ctrl(bool on);
 void lcd_cursor_ctrl(bool on, bool blink);

@@ -43,3 +43,13 @@ void key_init(void) {
 }
 
 //-----------------------------------------------------------------------------
+
+// return true if the "exit" key is pressed (escape,address)
+bool key_exit(void) {
+	if (!key_down()) {
+		return false;
+	}
+	return key_code() == KEYPAD_Address;
+}
+
+//-----------------------------------------------------------------------------

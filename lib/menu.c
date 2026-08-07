@@ -11,6 +11,7 @@ LCD Menu System
 #include "menu.h"
 #include "lcd.h"
 #include "keypad.h"
+#include "delay.h"
 
 //-----------------------------------------------------------------------------
 
@@ -69,6 +70,10 @@ static void menu_select(struct menu *m) {
 	// call the menu item function
 	if (m->items[m->index].func != NULL) {
 		m->items[m->index].func(m);
+	} else {
+		lcd_clear();
+		lcd_puts(0, 0, "func == NULL");
+		delay_500ms();
 	}
 }
 
