@@ -64,8 +64,8 @@ static void menu_up(struct menu *m) {
 	}
 }
 
-// move forward in the menu
-static void menu_forward(struct menu *m) {
+// select a menu item
+static void menu_select(struct menu *m) {
 	// call the menu item function
 	if (m->items[m->index].func != NULL) {
 		m->items[m->index].func(m);
@@ -104,9 +104,8 @@ static void menu_render(struct menu *m) {
 //-----------------------------------------------------------------------------
 
 // setup the menu with a menu item list
-void menu_setup(struct menu *m, uint8_t rows, uint8_t cols, struct menu_item *items) {
-	// setup the menu
-	uint8_t n = menu_length(items) - 1;
+void menu_setup(struct menu *m, uint8_t rows, uint8_t cols, const struct menu_item *items) {
+	uint8_t n = menu_length(items) - 1;	// watch out for empty menu item lists!
 	m->items = items;
 	m->rows = rows;
 	m->cols = cols;
@@ -120,6 +119,7 @@ void menu_setup(struct menu *m, uint8_t rows, uint8_t cols, struct menu_item *it
 
 void menu_run(struct menu *m) {
 	menu_render(m);
+	bool render = false;
 	while (1) {
 		if (!key_down()) {
 			continue;
@@ -127,24 +127,31 @@ void menu_run(struct menu *m) {
 		switch (key_code()) {
 		case KEYPAD_Plus:{
 				menu_down(m);
+				render = true;
 				break;
 			}
 		case KEYPAD_Minus:{
 				menu_up(m);
+				render = true;
 				break;
 			}
 		case KEYPAD_Go:{
-				menu_forward(m);
+				menu_select(m);
+				render = true;
 				break;
 			}
 		case KEYPAD_Address:{
+				// return to previous menu
 				return;
 			}
 		default:{
 				break;
 			}
 		}
-		menu_render(m);
+		if (render) {
+			menu_render(m);
+			render = false;
+		}
 	}
 }
 
@@ -152,7 +159,7 @@ void menu_run(struct menu *m) {
 
 // initialise the menu
 void menu_init(void) {
-	// setup the lcd
+	// setup special lcd characters
 	lcd_bitmap(UP_ARROW, up_arrow);
 	lcd_bitmap(DOWN_ARROW, down_arrow);
 	lcd_bitmap(ELLIPSIS, ellipsis);

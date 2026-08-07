@@ -47,7 +47,7 @@ static void sub_menu8_1(struct menu *m) {
 
 static const struct menu_item menu8[] = {
 	{"item 8.0", NULL},
-	{"item 8.1\x7", sub_menu8_1},
+	{"item 8.1" ELLIPSIS_STR, sub_menu8_1},
 	{"item 8.2", NULL},
 	MENU_EOL,
 };
@@ -61,7 +61,7 @@ static void sub_menu8(struct menu *m) {
 //-----------------------------------------------------------------------------
 
 static const struct menu_item root_items[] = {
-	{"menu item 0\x7", sub_menu0},
+	{"menu item 0" ELLIPSIS_STR, sub_menu0},
 	{"menu item 1", NULL},
 	{"menu item 2", NULL},
 	{"menu item 3", NULL},
@@ -69,7 +69,7 @@ static const struct menu_item root_items[] = {
 	{"menu item 5", NULL},
 	{"menu item 6", NULL},
 	{"menu item 7", NULL},
-	{"menu item 8\x7", sub_menu8},
+	{"menu item 8" ELLIPSIS_STR, sub_menu8},
 	{"menu item 9", NULL},
 	MENU_EOL,
 };
