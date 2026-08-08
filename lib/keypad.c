@@ -44,12 +44,13 @@ void key_init(void) {
 
 //-----------------------------------------------------------------------------
 
-// return true if the "exit" key is pressed (escape,address)
+// return true if the "exit" key is pressed (escape,address,minus)
 bool key_exit(void) {
 	if (!key_down()) {
 		return false;
 	}
-	return key_code() == KEYPAD_Address;
+	uint8_t code = key_code();
+	return (code == KEYPAD_Address) || (code == KEYPAD_Minus);
 }
 
 //-----------------------------------------------------------------------------

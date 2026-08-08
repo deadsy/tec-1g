@@ -105,8 +105,6 @@ int main(void) {
 	menu_init();
 	array88_clear();
 
-	lcd_display_ctrl(true);
-
 	struct menu m;
 	menu_setup(&m, LCD_ROWS, LCD_COLS, root_items);
 	while (1) {

@@ -19,6 +19,9 @@ Character LCD Driver (hd44780)
 #define LCD_ROWS 4
 #define LCD_COLS 20
 
+#define RIGHT_ARROW 0x7e
+#define LEFT_ARROW 0x7f
+
 //-----------------------------------------------------------------------------
 
 void lcd_init(void);

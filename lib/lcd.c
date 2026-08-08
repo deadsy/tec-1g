@@ -148,6 +148,9 @@ void lcd_init(void) {
 	display_state = false;
 	cursor_state = false;
 	blink_state = false;
+
+	// turn on the display
+	lcd_display_ctrl(true);
 }
 
 //-----------------------------------------------------------------------------

@@ -24,13 +24,6 @@ static const uint8_t up_arrow[] = { 0x04, 0x0E, 0x15, 0x04, 0x04, 0x04, 0x04, 0x
 static const uint8_t down_arrow[] = { 0x00, 0x04, 0x04, 0x04, 0x04, 0x15, 0x0E, 0x04 };
 static const uint8_t ellipsis[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0x00 };
 
-#define UP_ARROW 0x05		// custom
-#define DOWN_ARROW 0x06		// custom
-#define ELLIPSIS 0x07		// custom
-
-#define RIGHT_ARROW 0x7e
-#define LEFT_ARROW 0x7f
-
 //-----------------------------------------------------------------------------
 
 // return the number of items in a menu list
@@ -101,7 +94,6 @@ static void menu_render(struct menu *m) {
 	if (m->start != 0) {
 		lcd_putc(0, m->cols - 1, UP_ARROW);
 	}
-
 	// entries below marker
 	if (m->end != m->last) {
 		lcd_putc(m->rows - 1, m->cols - 1, DOWN_ARROW);
@@ -176,7 +168,7 @@ void menu_run(struct menu *m) {
 
 //-----------------------------------------------------------------------------
 
-// initialise the menu
+// initialise the menu (call lcd_init() first!!)
 void menu_init(void) {
 	// setup special lcd characters
 	lcd_bitmap(UP_ARROW, up_arrow);

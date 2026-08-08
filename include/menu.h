@@ -15,6 +15,15 @@ LCD Menu System
 
 //-----------------------------------------------------------------------------
 
+#define UP_ARROW 0x05		// menu custom character
+#define DOWN_ARROW 0x06		// menu custom character
+#define ELLIPSIS 0x07		// menu custom character
+
+// adds an ellipsis to indicate a sub-menu
+#define ELLIPSIS_STR "\x7"
+
+//-----------------------------------------------------------------------------
+
 struct menu;			// forward declaration
 
 struct menu_item {
@@ -35,11 +44,6 @@ struct menu {
 	uint8_t start;		// index of first displayed row
 	uint8_t end;		// index of last displayed row
 };
-
-//-----------------------------------------------------------------------------
-
-// adds an ellipsis to indicate a sub-menu
-#define ELLIPSIS_STR "\x7"
 
 //-----------------------------------------------------------------------------
 
