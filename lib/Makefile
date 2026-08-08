@@ -1,5 +1,7 @@
 TOP = $(shell realpath ..)
 
+GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+
 LIB = tec1
 
 OBJS = array88.rel \
@@ -14,7 +16,8 @@ CFLAGS = -mz80 \
 	--Werror \
 	--std-c99 \
 	-I $(TOP)/include \
-	-DHW_TEC_1G
+	-DHW_TEC_1G \
+	-DGIT_HASH=\"$(GIT_HASH)\"
 
 .PHONY: all
 all: $(OBJS)

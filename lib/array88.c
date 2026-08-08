@@ -21,12 +21,16 @@ static uint8_t blue[NUM_ROWS];
 
 //-----------------------------------------------------------------------------
 
-void array88_off(void) {
+void array88_clear(void) {
 	for (int8_t i = 0; i < NUM_ROWS; i++) {
 		red[i] = 0;
 		green[i] = 0;
 		blue[i] = 0;
 	}
+	xr88Port = 0;
+	xg88Port = 0;
+	xb88Port = 0;
+	y88Port = 0;
 }
 
 void array88_scan(void) {
@@ -98,14 +102,6 @@ void array88_box(uint8_t left, uint8_t bottom, uint8_t right, uint8_t top, uint8
 	array88_hline(left, right, top, color);
 	array88_vline(bottom + 1, top - 1, left, color);
 	array88_vline(bottom + 1, top - 1, right, color);
-}
-
-void array88_init(void) {
-	array88_off();
-	xr88Port = 0;
-	xg88Port = 0;
-	xb88Port = 0;
-	y88Port = 0;
 }
 
 //-----------------------------------------------------------------------------

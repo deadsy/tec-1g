@@ -27,7 +27,9 @@ static const uint8_t ellipsis[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0x
 #define UP_ARROW 0x05		// custom
 #define DOWN_ARROW 0x06		// custom
 #define ELLIPSIS 0x07		// custom
-#define SELECT_ARROW 0x7e	// standard
+
+#define RIGHT_ARROW 0x7e
+#define LEFT_ARROW 0x7f
 
 //-----------------------------------------------------------------------------
 
@@ -89,7 +91,7 @@ static void menu_render(struct menu *m) {
 	for (int i = m->start; i <= m->end; i++) {
 		// current item marker
 		if (i == m->index) {
-			lcd_putc(row, 0, SELECT_ARROW);
+			lcd_putc(row, 0, RIGHT_ARROW);
 		}
 		lcd_puts(row, 1, m->items[i].name);
 		row++;
@@ -104,6 +106,18 @@ static void menu_render(struct menu *m) {
 	if (m->end != m->last) {
 		lcd_putc(m->rows - 1, m->cols - 1, DOWN_ARROW);
 	}
+}
+
+//-----------------------------------------------------------------------------
+
+// display a generic about screen
+void menu_about(struct menu *m, const char *title) {
+	lcd_clear();
+	lcd_puts(0, 0, title);
+	lcd_puts(1, 0, "git:");
+	lcd_puts(1, 5, GIT_HASH);
+	lcd_putc(m->rows - 1, 0, LEFT_ARROW);
+	while (!key_exit()) ;
 }
 
 //-----------------------------------------------------------------------------

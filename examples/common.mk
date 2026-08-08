@@ -2,8 +2,6 @@ TOP = $(shell realpath ../..)
 
 TARGET = out
 
-GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-
 STACK = 0x7ffe
 CODE = 0x4000
 DATA = 0x6000
@@ -16,8 +14,7 @@ CFLAGS = -mz80 \
 	--Werror \
 	--std-c99 \
 	-I $(TOP)/include \
-	-DHW_TEC_1G \
-	-DGIT_HASH=\"$(GIT_HASH)\"
+	-DHW_TEC_1G
 
 LFLAGS = -mz80 \
 	--no-std-crt0 \
