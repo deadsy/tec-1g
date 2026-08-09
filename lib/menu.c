@@ -12,6 +12,7 @@ LCD Menu System
 #include "lcd.h"
 #include "keypad.h"
 #include "delay.h"
+#include "scroll.h"
 
 //-----------------------------------------------------------------------------
 
@@ -101,15 +102,37 @@ static void menu_render(struct menu *m) {
 }
 
 //-----------------------------------------------------------------------------
+// about screen
+
+#define SCROLL_WIDTH 20
+
+static void scroll_puts(const char *s) {
+	lcd_puts(2, 0, s);
+}
 
 // display a generic about screen
-void menu_about(struct menu *m, const char *title) {
+void menu_about(struct menu *m, const char *title, const char *url) {
+	char buf[SCROLL_WIDTH];
+
 	lcd_clear();
 	lcd_puts(0, 0, title);
-	lcd_puts(1, 0, "git:");
-	lcd_puts(1, 5, GIT_HASH);
+	lcd_puts(1, 0, "hash:");
+	lcd_puts(1, 6, GIT_HASH);
 	lcd_putc(m->rows - 1, 0, LEFT_ARROW);
-	while (!key_exit()) ;
+
+	struct scroll s = {
+		.msg = url,
+		.len = strlen(url),
+		.delta = +1,
+		.width = SCROLL_WIDTH,
+		.puts = scroll_puts,
+		.n = 0,
+	};
+
+	while (!key_exit()) {
+		delay_ms(150);
+		scroll_update(&s, buf);
+	}
 }
 
 //-----------------------------------------------------------------------------

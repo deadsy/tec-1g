@@ -85,7 +85,7 @@ static void random_test(struct menu *m) {
 //-----------------------------------------------------------------------------
 
 static void about(struct menu *m) {
-	menu_about(m, "8x8 rgb array test");
+	menu_about(m, "8x8 rgb array test", "https://github.com/deadsy/tec-1g" URL_PAD);
 }
 
 static const struct menu_item root_items[] = {

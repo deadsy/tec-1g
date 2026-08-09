@@ -29,6 +29,15 @@ __sfr __at 0xfd sdCardPort;	// GPIO SD Card
 __sfr __at 0xfe keyboardPort;	// Matrix Keyboard Input
 __sfr __at 0xff systemPort;	// System Latch
 
+__sfr __at 0xaa testPort;
+
+// rtcPort
+#define rtcOut (1 << 0)		// D0, output FROM rtc
+#define rtcChipEnable (1 << 4)	// D4, active high
+#define rtcWriteEnable (1 << 5)	// D5, active low
+#define rtcClock (1 << 6)	// D6
+#define rtcIn (1 << 7)		// D7, input TO rtc
+
 //-----------------------------------------------------------------------------
 #elif defined(HW_TEC_1)
 

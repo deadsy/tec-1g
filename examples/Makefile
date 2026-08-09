@@ -4,6 +4,7 @@ all:
 	make -C display $@
 	make -C lcd_test $@
 	make -C menu_test $@
+	make -C rtc_test $@
 
 .PHONY: clean
 clean:
@@ -11,3 +12,4 @@ clean:
 	make -C display $@
 	make -C lcd_test $@
 	make -C menu_test $@
+	make -C rtc_test $@

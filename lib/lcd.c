@@ -116,6 +116,19 @@ void lcd_clear(void) {
 	wr_command(cmdClear);
 }
 
+// clear an lcd row
+void lcd_clear_row(uint8_t row) {
+	if (row >= LCD_ROWS) {
+		return;
+	}
+	cursor_set(row, 0);
+	for (uint8_t col = 0; col < LCD_COLS; col++) {
+		wr_data(0x20 /*space */ );
+	}
+}
+
+//-----------------------------------------------------------------------------
+
 // display control - on/off.
 void lcd_display_ctrl(bool on) {
 	display_state = on;

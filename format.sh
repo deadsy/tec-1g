@@ -5,6 +5,7 @@ FILES="
 ./examples/display/main.c
 ./examples/lcd_test/main.c
 ./examples/menu_test/main.c
+./examples/rtc_test/main.c
 ./include/array88.h
 ./include/delay.h
 ./include/display.h
@@ -13,6 +14,7 @@ FILES="
 ./include/hw.h
 ./include/menu.h
 ./include/keypad.h
+./include/rtc.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -20,6 +22,7 @@ FILES="
 ./lib/scroll.c
 ./lib/menu.c
 ./lib/keypad.c
+./lib/rtc.c
 "
 
 for f in $FILES; do

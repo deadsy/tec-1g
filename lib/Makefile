@@ -10,6 +10,7 @@ OBJS = array88.rel \
 	scroll.rel \
 	menu.rel \
 	keypad.rel \
+	rtc.rel \
 	delay.rel
 
 CFLAGS = -mz80 \

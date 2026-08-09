@@ -1,67 +1,55 @@
 //-----------------------------------------------------------------------------
 /*
 
-Display Test Code
+RTC Test Code
 
 */
 //-----------------------------------------------------------------------------
 
 #include <string.h>
 
-#include "menu.h"
+#include "hw.h"
 #include "lcd.h"
+#include "menu.h"
 #include "keypad.h"
-#include "display.h"
+#include "delay.h"
+#include "rtc.h"
 
 //-----------------------------------------------------------------------------
 
-static void hex_count_test(struct menu *m) {
+static void get_time(struct menu *m) {
+	uint8_t secs = 0xff;
+	uint8_t dow = 0xff;
 	lcd_clear();
-	lcd_puts(0, 0, "counting...");
 	lcd_putc(m->rows - 1, 0, LEFT_ARROW);
-	uint16_t a = 0;
-	uint8_t b = 0;
 	while (!key_exit()) {
-		display_address(a);
-		display_byte(b);
-		for (uint8_t n = 0; n < 20; n++) {
-			display_scan();
+		if (secs != rtc_get_secs()) {
+			char tmp[32];
+			struct rtc_time t;
+			rtc_get_time(&t);
+			secs = t.second;
+			// these are fixed width fields, so just overwrite them
+			lcd_puts(0, 0, rtc_hms(&t, tmp));
+			lcd_puts(1, 0, rtc_date(&t, tmp));
+			// day of week changes requires a row clear
+			if (dow != t.day_of_week) {
+				dow = t.day_of_week;
+				lcd_clear_row(2);
+				lcd_puts(2, 0, rtc_day_of_week(&t));
+			}
 		}
-		a += 1;
-		b -= 1;
+		delay_ms(100);
 	}
-	display_clear();
-}
-
-//-----------------------------------------------------------------------------
-
-static void dec_count_test(struct menu *m) {
-	lcd_clear();
-	lcd_puts(0, 0, "counting...");
-	lcd_putc(m->rows - 1, 0, LEFT_ARROW);
-	uint16_t a = 0;
-	uint8_t b = 0;
-	while (!key_exit()) {
-		display_dec_hi(a, DISPLAY_ZERO);
-		display_dec_lo(b, DISPLAY_ZERO);
-		for (uint8_t n = 0; n < 20; n++) {
-			display_scan();
-		}
-		a += 1;
-		b -= 1;
-	}
-	display_clear();
 }
 
 //-----------------------------------------------------------------------------
 
 static void about(struct menu *m) {
-	menu_about(m, "display test", "https://github.com/deadsy/tec-1g" URL_PAD);
+	menu_about(m, "ds1302 rtc test", "https://github.com/deadsy/tec-1g" URL_PAD);
 }
 
 static const struct menu_item root_items[] = {
-	{"hex counter", hex_count_test},
-	{"dec counter", dec_count_test},
+	{"get time", get_time},
 	{"about", about},
 	MENU_EOL,
 };
@@ -72,7 +60,13 @@ int main(void) {
 	key_init();
 	lcd_init();
 	menu_init();
-	display_clear();
+
+	if (!rtc_init()) {
+		lcd_clear();
+		lcd_puts(0, 0, "rtc not present");
+		while (!key_exit()) ;
+		return -1;
+	}
 
 	struct menu m;
 	menu_setup(&m, LCD_ROWS, LCD_COLS, root_items);
