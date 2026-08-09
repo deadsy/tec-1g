@@ -15,6 +15,7 @@ FILES="
 ./include/menu.h
 ./include/keypad.h
 ./include/rtc.h
+./include/memshow.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -23,6 +24,7 @@ FILES="
 ./lib/menu.c
 ./lib/keypad.c
 ./lib/rtc.c
+./lib/memshow.c
 "
 
 for f in $FILES; do

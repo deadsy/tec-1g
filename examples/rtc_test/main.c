@@ -6,6 +6,7 @@ RTC Test Code
 */
 //-----------------------------------------------------------------------------
 
+#include <stdio.h>
 #include <string.h>
 
 #include "hw.h"
@@ -14,6 +15,7 @@ RTC Test Code
 #include "keypad.h"
 #include "delay.h"
 #include "rtc.h"
+#include "memshow.h"
 
 //-----------------------------------------------------------------------------
 
@@ -44,12 +46,31 @@ static void get_time(struct menu *m) {
 
 //-----------------------------------------------------------------------------
 
+static void get_ram(struct menu *m) {
+	uint8_t buf[RTC_RAM_SIZE];
+	rtc_get_ram(buf, sizeof(buf));
+
+	struct memshow ms = {
+		.rows = m->rows,
+		.cols = m->cols,
+		.buf = buf,
+		.n = sizeof(buf),
+		.adr = 0,
+		.idx = 0,
+	};
+
+	memshow_run(&ms);
+}
+
+//-----------------------------------------------------------------------------
+
 static void about(struct menu *m) {
 	menu_about(m, "ds1302 rtc test", "https://github.com/deadsy/tec-1g" URL_PAD);
 }
 
 static const struct menu_item root_items[] = {
 	{"get time", get_time},
+	{"get ram", get_ram},
 	{"about", about},
 	MENU_EOL,
 };

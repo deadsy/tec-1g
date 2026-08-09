@@ -15,6 +15,7 @@ RTC Driver (ds1302)
 //-----------------------------------------------------------------------------
 // ds1302 registers
 
+// clock
 #define	clockSecond        (0x80 | (0 << 1))
 #define	clockMinute        (0x80 | (1 << 1))
 #define	clockHour          (0x80 | (2 << 1))
@@ -30,6 +31,10 @@ RTC Driver (ds1302)
 #define clockHalted (1 << 7)	// in clockSecond
 #define mode12Hour (1 << 7)	// in clockHour
 
+// ram
+#define RAM_ADR(x) (0x80 | (1 << 6) | (((x) & 0x1f) << 1))
+#define	ramBurst RAM_ADR(0x1f)
+
 //-----------------------------------------------------------------------------
 
 static uint8_t bcd_to_uint(uint8_t x) {
@@ -37,23 +42,25 @@ static uint8_t bcd_to_uint(uint8_t x) {
 }
 
 //-----------------------------------------------------------------------------
+// time formatting routines
+
 // Note: the ds1302 has a 1..7 counter that increments every day.
 // The assignment of this counter to an actual day name is arbitrary.
 // This is the convention used on this system. It's up to the user
-// to configure this so the day name matches the actual date.
+// to configure the number so the day name matches the actual date.
 
 static const char *const day_of_week[] = {
-	"Monday",
-	"Tuesday",
-	"Wednesday",
-	"Thursday",
-	"Friday",
-	"Saturday",
-	"Sunday",
+	"Monday",		// 1
+	"Tuesday",		// 2
+	"Wednesday",		// 3
+	"Thursday",		// 4
+	"Friday",		// 5
+	"Saturday",		// 6
+	"Sunday",		// 7
 };
 
 const char *rtc_day_of_week(struct rtc_time *t) {
-	return day_of_week[(t->day_of_week - 1) & 7];
+	return day_of_week[(t->day_of_week - 1) % 7];
 }
 
 char *rtc_hms(struct rtc_time *t, char *s) {
@@ -145,6 +152,7 @@ static void rtc_wr(uint8_t adr, uint8_t val) {
 }
 
 //-----------------------------------------------------------------------------
+// time
 
 void rtc_get_time(struct rtc_time *t) {
 	uint8_t buf[8];
@@ -167,6 +175,24 @@ void rtc_get_time(struct rtc_time *t) {
 
 uint8_t rtc_get_secs(void) {
 	return bcd_to_uint(rtc_rd(clockSecond) & ~clockHalted);
+}
+
+//-----------------------------------------------------------------------------
+// ram
+
+// read a value from ram
+uint8_t rtc_rd_ram(uint8_t adr) {
+	return rtc_rd(RAM_ADR(adr));
+}
+
+// write a value to ram
+void rtc_wr_ram(uint8_t adr, uint8_t val) {
+	rtc_wr(RAM_ADR(adr), val);
+}
+
+// get a buffer of ram values
+void rtc_get_ram(uint8_t *buf, uint8_t n) {
+	rtc_rd_burst(ramBurst, buf, n);
 }
 
 //-----------------------------------------------------------------------------

@@ -11,6 +11,7 @@ OBJS = array88.rel \
 	menu.rel \
 	keypad.rel \
 	rtc.rel \
+	memshow.rel \
 	delay.rel
 
 CFLAGS = -mz80 \

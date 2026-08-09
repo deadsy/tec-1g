@@ -29,13 +29,22 @@ struct rtc_time {
 };
 
 #define RTC_BASE_YEAR 2000
+#define RTC_RAM_SIZE 31
 
 //-----------------------------------------------------------------------------
 
 bool rtc_init(void);
+
+// time
 uint8_t rtc_get_secs(void);
 void rtc_get_time(struct rtc_time *t);
 
+// ram
+uint8_t rtc_rd_ram(uint8_t adr);
+void rtc_wr_ram(uint8_t adr, uint8_t val);
+void rtc_get_ram(uint8_t * buf, uint8_t n);
+
+// formatting
 const char *rtc_day_of_week(struct rtc_time *t);
 char *rtc_hms(struct rtc_time *t, char *s);
 char *rtc_date(struct rtc_time *t, char *s);
