@@ -16,6 +16,7 @@ RTC Test Code
 #include "delay.h"
 #include "rtc.h"
 #include "memshow.h"
+#include "display.h"
 
 //-----------------------------------------------------------------------------
 
@@ -39,9 +40,15 @@ static void get_time(struct menu *m) {
 				lcd_clear_row(2);
 				lcd_puts(2, 0, rtc_day_of_week(&t));
 			}
+			// show h:m:s on the 7 segment displays
+			display_dec_hi((t.hour * 100) + t.minute, DISPLAY_ZERO);
+			display_dec_lo(t.second, DISPLAY_ZERO);
 		}
-		delay_ms(100);
+		for (uint8_t n = 0; n < 20; n++) {
+			display_scan();
+		}
 	}
+	display_clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -81,6 +88,7 @@ int main(void) {
 	key_init();
 	lcd_init();
 	menu_init();
+	display_clear();
 
 	if (!rtc_init()) {
 		lcd_clear();
