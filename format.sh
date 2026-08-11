@@ -15,6 +15,7 @@ FILES="
 ./include/menu.h
 ./include/keypad.h
 ./include/rtc.h
+./include/glcd.h
 ./include/memshow.h
 ./lib/array88.c
 ./lib/delay.c
@@ -24,6 +25,7 @@ FILES="
 ./lib/menu.c
 ./lib/keypad.c
 ./lib/rtc.c
+./lib/glcd.c
 ./lib/memshow.c
 "
 

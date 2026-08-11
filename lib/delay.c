@@ -14,6 +14,21 @@ Assumes a clock rate of 4 MHz
 
 /* *INDENT-OFF* */
 
+void delay_75us(void) {
+    __asm
+        ld      b, #19      ; 7
+    00001$:
+        djnz    00001$      ; 13*18 + 8 = 242
+        nop                 ; 4
+        nop                 ; 4
+        nop                 ; 4
+        nop                 ; 4
+        nop                 ; 4
+        nop                 ; 4
+                            ; Note: SDCC automatically appends the 'ret' (10 T-states)
+    __endasm;
+}
+
 void delay_125us(void) {
     __asm
         ld   b, #35         ; 7 T-states  : Load loop counter

@@ -1,13 +1,13 @@
 //-----------------------------------------------------------------------------
 /*
 
-Delay Routines
+Graphics LCD Driver (st7920)
 
 */
 //-----------------------------------------------------------------------------
 
-#ifndef DELAY_H
-#define DELAY_H
+#ifndef GLCD_H
+#define GLCD_H
 
 //-----------------------------------------------------------------------------
 
@@ -15,15 +15,18 @@ Delay Routines
 
 //-----------------------------------------------------------------------------
 
-void delay_75us(void);
-void delay_125us(void);
-void delay_1ms(void);
-void delay_ms(uint8_t n);
-void delay_500ms(void);
-void delay_1s(void);
+void glcd_init(void);
+
+// graphics
+void glcd_set_graphics_mode(void);
+
+// text
+void glcd_set_text_mode(void);
+void glcd_puts(uint8_t row, uint8_t col, const char *s);
+void glcd_text_clear(void);
 
 //-----------------------------------------------------------------------------
 
-#endif				// DELAY_H
+#endif				// GLCD_H
 
 //-----------------------------------------------------------------------------
