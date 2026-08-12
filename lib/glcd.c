@@ -7,7 +7,6 @@ Graphics LCD Driver (st7920)
 //-----------------------------------------------------------------------------
 
 #include <string.h>
-#include <stdbool.h>
 
 #include "glcd.h"
 #include "hw.h"
@@ -15,13 +14,8 @@ Graphics LCD Driver (st7920)
 
 //-----------------------------------------------------------------------------
 
-#define GLCD_ROWS 4
-#define GLCD_COLS 16
-
 #define GLCD_PIXELS_H 128
 #define GLCD_PIXELS_V 64
-
-#define GLCD_SPACE 0x20
 
 //-----------------------------------------------------------------------------
 
@@ -47,15 +41,6 @@ Graphics LCD Driver (st7920)
 
 //-----------------------------------------------------------------------------
 
-// graphics buffer
-static uint8_t gbuf[(GLCD_PIXELS_H * GLCD_PIXELS_V) >> 3];
-
-static void gbuf_clear() {
-	memset(gbuf, 0, sizeof(gbuf));
-}
-
-//-----------------------------------------------------------------------------
-
 static void wr_command(uint8_t cmd) {
 	glcdCommandPort = cmd;
 	while ((glcdCommandPort & BUSYFLAG) != 0) ;
@@ -78,46 +63,104 @@ void glcd_set_graphics_mode(void) {
 }
 
 //-----------------------------------------------------------------------------
+// graphics (gdram) operations
 
-// text buffer
-static uint8_t tbuf[GLCD_ROWS * GLCD_COLS];
+// graphics buffer
+static uint8_t glcd_gbuf[(GLCD_PIXELS_H * GLCD_PIXELS_V) >> 3];
 
-static void tbuf_clear() {
-	memset(tbuf, GLCD_SPACE, sizeof(tbuf));
+void glcd_clear_graphics(bool flush) {
+	memset(glcd_gbuf, 0, sizeof(glcd_gbuf));
+	if (flush) {
+		glcd_set_graphics_mode();
+		// TODO
+	}
 }
 
-static inline bool valid_ddram_posn(uint8_t row, uint8_t col) {
+//-----------------------------------------------------------------------------
+// Text (ddram) operations.
+// Text operations write to a RAM buffer (glcd_tbuf).
+// The buffer is then flushed to the st7920 upon command.
+
+// text buffer
+static uint8_t glcd_tbuf[GLCD_ROWS][GLCD_COLS];
+
+// return true for a valid position in the text buffer
+static inline bool valid_text_posn(uint8_t row, uint8_t col) {
 	return (row < GLCD_ROWS) && (col < GLCD_COLS);
 }
 
+// set the ddram address to the start of a row
 static const uint8_t row_map[4] = { 0, 2, 1, 3 };
-
-static inline void set_ddram_posn(uint8_t row, uint8_t col) {
-	// note: col is /2 implying the col is 0,2,4...
-	wr_command(cmdDdramAddress((row_map[row] << 3) | (col >> 1)));
+static inline void set_ddram_row(uint8_t row) {
+	wr_command(cmdDdramAddress(row_map[row] << 3));
 }
 
-void glcd_puts(uint8_t row, uint8_t col, const char *s) {
-	// we always start at an even column
-	col &= ~1;
-	if (!valid_ddram_posn(row, col)) {
+// flush a single row to the st7920 (text mode is set)
+static void flush_text_row(uint8_t row) {
+	set_ddram_row(row);
+	uint8_t *ptr = &glcd_tbuf[row][0];
+	for (uint8_t i = 0; i < GLCD_COLS; i++) {
+		wr_data(*ptr++);
+	}
+}
+
+// flush a single row to the st7920
+void glcd_flush_text_row(uint8_t row) {
+	glcd_set_text_mode();
+	flush_text_row(row);
+}
+
+// flush all text rows to the st7920
+void glcd_flush_text(void) {
+	glcd_set_text_mode();
+	flush_text_row(0);
+	flush_text_row(1);
+	flush_text_row(2);
+	flush_text_row(3);
+}
+
+// clear a text row
+void glcd_clear_text_row(uint8_t row, bool flush) {
+	uint8_t *ptr = &glcd_tbuf[row][0];
+	memset(ptr, GLCD_SPACE, GLCD_COLS);
+	if (flush) {
+		flush_text_row(row);
+	}
+}
+
+// clear the text screen
+void glcd_clear_text(bool flush) {
+	memset(glcd_tbuf, GLCD_SPACE, sizeof(glcd_tbuf));
+	if (flush) {
+		glcd_set_text_mode();
+		wr_command(cmdClear);
+	}
+}
+
+// write a string to the text buffer (no line wrapping)
+void glcd_puts(uint8_t row, uint8_t col, const char *s, bool flush) {
+	if (!valid_text_posn(row, col)) {
 		return;
 	}
-	glcd_set_text_mode();
-	set_ddram_posn(row, col);
-	uint8_t n = 0;
+	uint8_t *ptr = &glcd_tbuf[row][col];
 	while ((*s != 0) && (col < GLCD_COLS)) {
-		wr_data(*s++);
-		col += 1;
-		n += 1;
+		*ptr++ = *s++;
+		col++;
 	}
-	if (n & 1) {
-		wr_data(GLCD_SPACE);
+	if (flush) {
+		glcd_flush_text_row(row);
 	}
 }
 
-void glcd_text_clear(void) {
-	wr_command(cmdClear);
+// write a character to the text buffer
+void glcd_putc(uint8_t row, uint8_t col, char c, bool flush) {
+	if (!valid_text_posn(row, col)) {
+		return;
+	}
+	glcd_tbuf[row][col] = c;
+	if (flush) {
+		glcd_flush_text_row(row);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -133,6 +176,9 @@ void glcd_init(void) {
 	glcdCommandPort = cmdClear;
 	delay_ms(11);
 	glcdCommandPort = cmdEntryMode(1, 0);
+
+	glcd_clear_text(false);
+	glcd_clear_graphics(false);
 }
 
 //-----------------------------------------------------------------------------
