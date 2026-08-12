@@ -19,6 +19,9 @@ Graphics LCD Driver (st7920)
 #define GLCD_ROWS 4
 #define GLCD_COLS 16
 
+#define GLCD_PIXELS_H 128
+#define GLCD_PIXELS_V 64
+
 #define GLCD_SPACE 0x20
 #define GLCD_LEFT_ARROW 0x1b
 #define GLCD_RIGHT_ARROW 0x1a
@@ -30,6 +33,10 @@ void glcd_init(void);
 // graphics
 void glcd_set_graphics_mode(void);
 void glcd_clear_graphics(bool flush);
+void glcd_flush_graphics(void);
+void glcd_plot(uint8_t x, uint8_t y, bool flush);
+void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x, bool flush);
+void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y, bool flush);
 
 // text
 void glcd_set_text_mode(void);

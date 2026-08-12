@@ -3,6 +3,17 @@
 
 Graphics LCD Driver (st7920)
 
+Note: The st7920 gdram is 256 x 64 pixels. The display size is 128 x 64 pixels.
+
+This is the gdram arrangement:
+A B
+C D
+where each A,B,C,D are each 128 x 32 pixels.
+
+This is the gdram to display mapping:
+A
+B
+
 */
 //-----------------------------------------------------------------------------
 
@@ -14,8 +25,8 @@ Graphics LCD Driver (st7920)
 
 //-----------------------------------------------------------------------------
 
-#define GLCD_PIXELS_H 128
-#define GLCD_PIXELS_V 64
+#define BYTES_PER_ROW (GLCD_PIXELS_H >> 3)
+#define HALF_Y (GLCD_PIXELS_V >> 1)
 
 //-----------------------------------------------------------------------------
 
@@ -68,11 +79,136 @@ void glcd_set_graphics_mode(void) {
 // graphics buffer
 static uint8_t glcd_gbuf[(GLCD_PIXELS_H * GLCD_PIXELS_V) >> 3];
 
+// return true for a valid position in the graphics buffer
+static inline bool valid_graphics_posn(uint8_t x, uint8_t y) {
+	return (x < GLCD_PIXELS_H) && (y < GLCD_PIXELS_V);
+}
+
+// set the gdram address to the start of a y-row.
+static inline void set_gdram_adr(uint8_t y) {
+	wr_command(cmdGdramAddress(y));
+	wr_command(cmdGdramAddress(0));
+}
+
+// clear the gdram of the st7920
+static void clear_graphics(void) {
+	for (uint8_t y = 0; y < HALF_Y; y++) {
+		set_gdram_adr(y);
+		for (uint8_t i = 0; i < (BYTES_PER_ROW << 1); i++) {
+			wr_data(0);
+			wr_data(0);
+		}
+	}
+}
+
+// flush the graphics buffer to gdram
+static void flush_graphics(void) {
+	for (uint8_t y = 0; y < HALF_Y; y++) {
+		set_gdram_adr(y);
+		// top half of display
+		uint8_t *ptr = &glcd_gbuf[y * BYTES_PER_ROW];
+		for (uint8_t i = 0; i < (BYTES_PER_ROW >> 1); i++) {
+			wr_data(*ptr++);
+			wr_data(*ptr++);
+		}
+		// bottom half of display
+		ptr = &glcd_gbuf[(y + HALF_Y) * BYTES_PER_ROW];
+		for (uint8_t i = 0; i < (BYTES_PER_ROW >> 1); i++) {
+			wr_data(*ptr++);
+			wr_data(*ptr++);
+		}
+	}
+}
+
+void glcd_flush_graphics(void) {
+	glcd_set_graphics_mode();
+	flush_graphics();
+}
+
+// clear the graphics buffer (and optionally the device)
 void glcd_clear_graphics(bool flush) {
 	memset(glcd_gbuf, 0, sizeof(glcd_gbuf));
 	if (flush) {
 		glcd_set_graphics_mode();
-		// TODO
+		clear_graphics();
+	}
+}
+
+void glcd_plot(uint8_t x, uint8_t y, bool flush) {
+	if (!valid_graphics_posn(x, y)) {
+		return;
+	}
+	glcd_gbuf[(y * BYTES_PER_ROW) + (x >> 3)] |= 1 << (7 - (x & 3));
+	if (flush) {
+		glcd_set_graphics_mode();
+		flush_graphics();
+	}
+}
+
+void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x, bool flush) {
+	if (!valid_graphics_posn(x, y0)) {
+		return;
+	}
+	if (!valid_graphics_posn(x, y1)) {
+		return;
+	}
+	if (y0 > y1) {
+		return;
+	}
+	if (y0 == y1) {
+		glcd_plot(x, y0, flush);
+		return;
+	}
+	uint8_t bit = 1 << (7 - (x & 3));
+	uint16_t ofs = (y0 * BYTES_PER_ROW) + (x >> 3);
+	for (uint8_t i = y0; i <= y1; i++) {
+		glcd_gbuf[ofs] |= bit;
+		ofs += BYTES_PER_ROW;
+	}
+	if (flush) {
+		glcd_set_graphics_mode();
+		flush_graphics();
+	}
+}
+
+void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y, bool flush) {
+	if (!valid_graphics_posn(x0, y)) {
+		return;
+	}
+	if (!valid_graphics_posn(x1, y)) {
+		return;
+	}
+	if (x0 > x1) {
+		return;
+	}
+	if (x0 == x1) {
+		glcd_plot(x0, y, flush);
+		return;
+	}
+
+	uint8_t *ptr = &glcd_gbuf[y * BYTES_PER_ROW];
+	uint8_t b0 = x0 >> 3;
+	uint8_t b1 = x1 >> 3;
+
+	if (b0 == b1) {
+		// head and tail in same byte
+		uint8_t n = x1 - x0 + 1;
+		ptr[b0] |= ((1 << n) - 1) << (8 - n);
+	} else {
+		// head and tail in different bytes
+		// head
+		uint8_t n = 8 - (x0 & 7);
+		ptr[b0] |= ((1 << n) - 1) << (8 - n);
+		// tail
+		n = 1 + (x1 & 7);
+		ptr[b1] |= ((1 << n) - 1) << (8 - n);
+		// body (could be empty)
+		memset(&ptr[b0 + 1], 0xff, b1 - b0 - 1);
+	}
+
+	if (flush) {
+		glcd_set_graphics_mode();
+		flush_graphics();
 	}
 }
 

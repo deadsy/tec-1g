@@ -116,6 +116,32 @@ static void scroll_test(struct menu *m) {
 
 //-----------------------------------------------------------------------------
 
+static void plot_test(struct menu *m) {
+	(void)m;
+
+	//glcd_plot(1,1, false);
+	//glcd_plot(2,2, false);
+	//glcd_plot(3,3, false);
+
+	//glcd_plot(62,1, false);
+	//glcd_plot(1,126, false);
+	//glcd_plot(62, 126, false);
+
+	//glcd_vline(0,63,0, false);
+	//glcd_vline(0,63,127, false);
+
+	for (uint8_t i = 0; i < 64; i ++) {
+		glcd_hline(0,i,i, false);
+	}
+
+	glcd_flush_graphics();
+
+	while (!key_exit());
+	glcd_clear_graphics(true);
+}
+
+//-----------------------------------------------------------------------------
+
 static void about(struct menu *m) {
 	menu_about(m, "st7920 glcd test", "https://github.com/deadsy/tec-1g" URL_PAD);
 }
@@ -123,6 +149,7 @@ static void about(struct menu *m) {
 static const struct menu_item root_items[] = {
 	{"text", text_test},
 	{"scroll", scroll_test},
+	{"plot", plot_test},
 	{"about", about},
 	MENU_EOL,
 };
