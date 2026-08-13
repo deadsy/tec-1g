@@ -64,8 +64,8 @@ static void scroll_puts2(const char *s) {
 	glcd_puts(2, 0, s);
 }
 
-static const char msg0[] = "They see me scrollin' they hatin'   ";
-static const char msg1[] = "This is the string end, beautiful friend   ";
+static const char msg0[] = "They see me scrollin', they hatin', wanna catch me codin' dirty...  ";
+static const char msg1[] = "This is the string end, beautiful friend  ";
 static const char msg2[] = "Greg! The stop bit!     ";
 
 static void scroll_test(struct menu *m) {
@@ -143,9 +143,35 @@ static void vline_test(struct menu *m) {
 
 	for (uint8_t i = 0; i < 64; i ++) {
 		glcd_vline(0,i,i);
-		glcd_vline(i + 5,MIN(63,i + 13),i);
+		glcd_vline(i + 5,i + 13,i);
 		glcd_vline(0,i,127-i);
-		glcd_vline(i + 5,MIN(63,i + 22),127-i);
+		glcd_vline(i + 5,i + 22,127-i);
+	}
+	glcd_flush();
+
+	while (!key_exit());
+	glcd_clear(true);
+}
+
+//-----------------------------------------------------------------------------
+
+#define BOX_SIZE 7
+#define BOX_XSTEP 5
+#define BOX_YSTEP 3
+
+static void box_test(struct menu *m) {
+	(void)m;
+
+	uint8_t x0 = 0;
+	uint8_t y0 = 0;
+	uint8_t size = BOX_SIZE;
+
+	glcd_clear(false);
+	for (uint8_t i = 0; i < 15; i ++) {
+		glcd_box(x0,y0,x0 + size,y0 + size);
+		x0 += BOX_XSTEP;
+		y0 += BOX_YSTEP;
+		size += 1;
 	}
 	glcd_flush();
 
@@ -164,6 +190,7 @@ static const struct menu_item root_items[] = {
 	{"scroll", scroll_test},
 	{"hline", hline_test},
 	{"vline", vline_test},
+	{"box", box_test},
 	{"about", about},
 	MENU_EOL,
 };

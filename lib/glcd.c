@@ -135,18 +135,24 @@ void glcd_plot(uint8_t x, uint8_t y) {
 
 // plot a vertical line in the graphics buffer
 void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x) {
-	if (!valid_graphics_posn(x, y0)) {
-		return;
-	}
-	if (!valid_graphics_posn(x, y1)) {
-		return;
-	}
+	// swap y0/y1 so y0 <= y1
 	if (y0 > y1) {
-		return;
+		uint8_t tmp = y1;
+		y1 = y0;
+		y0 = tmp;
 	}
+	// single pixel?
 	if (y0 == y1) {
 		glcd_plot(x, y0);
 		return;
+	}
+	if (!valid_graphics_posn(x, y0)) {
+		// both points not on display
+		return;
+	}
+	if (!valid_graphics_posn(x, y1)) {
+		// clamp y1 to the edge
+		y1 = GLCD_PIXELS_V - 1;
 	}
 	uint8_t bit = 1 << (7 - (x & 7));
 	uint16_t ofs = (y0 * BYTES_PER_ROW) + (x >> 3);
@@ -158,17 +164,24 @@ void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x) {
 
 // plot a horizontal line in the graphics buffer
 void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y) {
+	// swap x0/x1 so x0 <= x1
+	if (x0 > x1) {
+		uint8_t tmp = x1;
+		x1 = x0;
+		x0 = tmp;
+	}
+	// single pixel?
+	if (x0 == x1) {
+		glcd_plot(x0, y);
+		return;
+	}
 	if (!valid_graphics_posn(x0, y)) {
+		// both points not on display
 		return;
 	}
 	if (!valid_graphics_posn(x1, y)) {
-		return;
-	}
-	if (x0 > x1) {
-		return;
-	}
-	if (x0 == x1) {
-		glcd_plot(x0, y);
+		// clamp x1 to the edge
+		x1 = GLCD_PIXELS_H - 1;
 		return;
 	}
 
@@ -191,6 +204,16 @@ void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y) {
 		// body (could be empty)
 		memset(&ptr[b0 + 1], 0xff, b1 - b0 - 1);
 	}
+}
+
+// plot a box in the graphics buffer
+// x0/y0 = top/left
+// x1/y1 = bottom/right
+void glcd_box(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
+	glcd_hline(x0, x1, y0);
+	glcd_hline(x0, x1, y1);
+	glcd_vline(y0, y1, x0);
+	glcd_vline(y0, y1, x1);
 }
 
 //-----------------------------------------------------------------------------

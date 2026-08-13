@@ -37,6 +37,7 @@ void glcd_flush_graphics(void);
 void glcd_plot(uint8_t x, uint8_t y);
 void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x);
 void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y);
+void glcd_box(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
 
 // text
 void glcd_set_text_mode(void);
