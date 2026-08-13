@@ -1,21 +1,24 @@
 # TEC-1G Code
 
-C-code applications for the Z80 based TEC-1G computer.
+C-code applications for the Z80 based [TEC-1G](https://github.com/MarkJelic/TEC-1G) computer.
 
 # Contents
 
- * lib - drivers for TEC-1G peripherals
+ * lib - drivers and utilities for TEC-1G peripherals
  * examples - code examples
 
 # How To Build
- * Use Linux :-)
  * Type "make" at the top-level.
+ * Linux, ok
+ * MacOS, ok
+ * Windows, not tested
 
 # How To Use
- * The code examples compile to an out.ihx file (intel hex file)
- * The hex files link to 0x4000 (mon3 application start address)
- * load the hex file, go to 0x4000, go ....
+ * The example applications compile to a out.ihx file (intel hex file)
+ * The applications have a start address of 0x4000 (mon3 application start address)
+ * Load the hex file, go to 0x4000, go ....
 
 # Dependencies
- * sdcc - small device c-compiler https://sdcc.sourceforge.net/
+ * [sdcc](https://sdcc.sourceforge.net/) the small device c-compiler
+ * GNU Make
 
