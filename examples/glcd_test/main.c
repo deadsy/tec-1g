@@ -22,24 +22,24 @@ static void text_test(struct menu *m) {
 
 	glcd_clear_text(false);
 
-	glcd_puts(0,0, "00", false);
-	glcd_puts(1,0, "10", false);
-	glcd_puts(2,0, "20", false);
-	glcd_puts(3,0, "30", false);
+	glcd_puts(0,0, "00");
+	glcd_puts(1,0, "10");
+	glcd_puts(2,0, "20");
+	glcd_puts(3,0, "30");
 
-	glcd_puts(0,14, "0f", false);
-	glcd_puts(1,14, "1f", false);
-	glcd_puts(2,14, "2f", false);
-	glcd_puts(3,14, "3f", false);
+	glcd_puts(0,14, "0f");
+	glcd_puts(1,14, "1f");
+	glcd_puts(2,14, "2f");
+	glcd_puts(3,14, "3f");
 
-	glcd_puts(0,6, "8x16", false);
-	glcd_puts(1,6, "Text", false);
-	glcd_puts(2,3, "Characters", false);
+	glcd_puts(0,6, "8x16");
+	glcd_puts(1,6, "Text");
+	glcd_puts(2,3, "Characters");
 
-	glcd_putc(3,6, '&', false);
-	glcd_putc(3,7, '%', false);
-	glcd_putc(3,8, '#', false);
-	glcd_putc(3,9, '@', false);
+	glcd_putc(3,6, '&');
+	glcd_putc(3,7, '%');
+	glcd_putc(3,8, '#');
+	glcd_putc(3,9, '@');
 
 	glcd_flush_text();
 
@@ -53,15 +53,15 @@ static void text_test(struct menu *m) {
 #define SCROLL_WIDTH 16
 
 static void scroll_puts0(const char *s) {
-	glcd_puts(0, 0, s, false);
+	glcd_puts(0, 0, s);
 }
 
 static void scroll_puts1(const char *s) {
-	glcd_puts(1, 0, s, false);
+	glcd_puts(1, 0, s);
 }
 
 static void scroll_puts2(const char *s) {
-	glcd_puts(2, 0, s, false);
+	glcd_puts(2, 0, s);
 }
 
 static const char msg0[] = "They see me scrollin' they hatin'   ";
@@ -101,7 +101,7 @@ static void scroll_test(struct menu *m) {
 	};
 
 	glcd_clear_text(false);
-	glcd_putc(3,0, GLCD_LEFT_ARROW, false);
+	glcd_putc(3,0, GLCD_LEFT_ARROW);
 
 	while (!key_exit()) {
 		delay_ms(150);
@@ -116,28 +116,41 @@ static void scroll_test(struct menu *m) {
 
 //-----------------------------------------------------------------------------
 
-static void plot_test(struct menu *m) {
+static void hline_test(struct menu *m) {
 	(void)m;
 
-	//glcd_plot(1,1, false);
-	//glcd_plot(2,2, false);
-	//glcd_plot(3,3, false);
-
-	//glcd_plot(62,1, false);
-	//glcd_plot(1,126, false);
-	//glcd_plot(62, 126, false);
-
-	//glcd_vline(0,63,0, false);
-	//glcd_vline(0,63,127, false);
-
 	for (uint8_t i = 0; i < 64; i ++) {
-		glcd_hline(0,i,i, false);
+		glcd_hline(0,i,i);
+		glcd_hline(i+64,127,i);
+		glcd_hline(i+7,i+9,i);
+		glcd_hline(i+15,i+32,i);
 	}
-
 	glcd_flush_graphics();
 
 	while (!key_exit());
 	glcd_clear_graphics(true);
+}
+
+//-----------------------------------------------------------------------------
+
+static void vline_test(struct menu *m) {
+	(void)m;
+
+	glcd_clear(false);
+
+	glcd_puts(0,4, "Vertical");
+	glcd_puts(1,5, "Lines");
+
+	for (uint8_t i = 0; i < 64; i ++) {
+		glcd_vline(0,i,i);
+		glcd_vline(i + 5,MIN(63,i + 13),i);
+		glcd_vline(0,i,127-i);
+		glcd_vline(i + 5,MIN(63,i + 22),127-i);
+	}
+	glcd_flush();
+
+	while (!key_exit());
+	glcd_clear(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -149,7 +162,8 @@ static void about(struct menu *m) {
 static const struct menu_item root_items[] = {
 	{"text", text_test},
 	{"scroll", scroll_test},
-	{"plot", plot_test},
+	{"hline", hline_test},
+	{"vline", vline_test},
 	{"about", about},
 	MENU_EOL,
 };

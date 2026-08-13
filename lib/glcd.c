@@ -90,19 +90,9 @@ static inline void set_gdram_adr(uint8_t y) {
 	wr_command(cmdGdramAddress(0));
 }
 
-// clear the gdram of the st7920
-static void clear_graphics(void) {
-	for (uint8_t y = 0; y < HALF_Y; y++) {
-		set_gdram_adr(y);
-		for (uint8_t i = 0; i < (BYTES_PER_ROW << 1); i++) {
-			wr_data(0);
-			wr_data(0);
-		}
-	}
-}
-
-// flush the graphics buffer to gdram
-static void flush_graphics(void) {
+// flush the graphics buffer to the device
+void glcd_flush_graphics(void) {
+	glcd_set_graphics_mode();
 	for (uint8_t y = 0; y < HALF_Y; y++) {
 		set_gdram_adr(y);
 		// top half of display
@@ -120,32 +110,31 @@ static void flush_graphics(void) {
 	}
 }
 
-void glcd_flush_graphics(void) {
-	glcd_set_graphics_mode();
-	flush_graphics();
-}
-
 // clear the graphics buffer (and optionally the device)
 void glcd_clear_graphics(bool flush) {
 	memset(glcd_gbuf, 0, sizeof(glcd_gbuf));
 	if (flush) {
 		glcd_set_graphics_mode();
-		clear_graphics();
+		for (uint8_t y = 0; y < HALF_Y; y++) {
+			set_gdram_adr(y);
+			for (uint8_t i = 0; i < (BYTES_PER_ROW << 1); i++) {
+				wr_data(0);
+				wr_data(0);
+			}
+		}
 	}
 }
 
-void glcd_plot(uint8_t x, uint8_t y, bool flush) {
+// plot a pixel in the graphics buffer
+void glcd_plot(uint8_t x, uint8_t y) {
 	if (!valid_graphics_posn(x, y)) {
 		return;
 	}
-	glcd_gbuf[(y * BYTES_PER_ROW) + (x >> 3)] |= 1 << (7 - (x & 3));
-	if (flush) {
-		glcd_set_graphics_mode();
-		flush_graphics();
-	}
+	glcd_gbuf[(y * BYTES_PER_ROW) + (x >> 3)] |= 1 << (7 - (x & 7));
 }
 
-void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x, bool flush) {
+// plot a vertical line in the graphics buffer
+void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x) {
 	if (!valid_graphics_posn(x, y0)) {
 		return;
 	}
@@ -156,22 +145,19 @@ void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x, bool flush) {
 		return;
 	}
 	if (y0 == y1) {
-		glcd_plot(x, y0, flush);
+		glcd_plot(x, y0);
 		return;
 	}
-	uint8_t bit = 1 << (7 - (x & 3));
+	uint8_t bit = 1 << (7 - (x & 7));
 	uint16_t ofs = (y0 * BYTES_PER_ROW) + (x >> 3);
 	for (uint8_t i = y0; i <= y1; i++) {
 		glcd_gbuf[ofs] |= bit;
 		ofs += BYTES_PER_ROW;
 	}
-	if (flush) {
-		glcd_set_graphics_mode();
-		flush_graphics();
-	}
 }
 
-void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y, bool flush) {
+// plot a horizontal line in the graphics buffer
+void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y) {
 	if (!valid_graphics_posn(x0, y)) {
 		return;
 	}
@@ -182,7 +168,7 @@ void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y, bool flush) {
 		return;
 	}
 	if (x0 == x1) {
-		glcd_plot(x0, y, flush);
+		glcd_plot(x0, y);
 		return;
 	}
 
@@ -193,22 +179,17 @@ void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y, bool flush) {
 	if (b0 == b1) {
 		// head and tail in same byte
 		uint8_t n = x1 - x0 + 1;
-		ptr[b0] |= ((1 << n) - 1) << (8 - n);
+		ptr[b0] |= ((1 << n) - 1) << (7 - (x1 & 7));
 	} else {
 		// head and tail in different bytes
 		// head
 		uint8_t n = 8 - (x0 & 7);
-		ptr[b0] |= ((1 << n) - 1) << (8 - n);
+		ptr[b0] |= ((1 << n) - 1);
 		// tail
 		n = 1 + (x1 & 7);
 		ptr[b1] |= ((1 << n) - 1) << (8 - n);
 		// body (could be empty)
 		memset(&ptr[b0 + 1], 0xff, b1 - b0 - 1);
-	}
-
-	if (flush) {
-		glcd_set_graphics_mode();
-		flush_graphics();
 	}
 }
 
@@ -249,10 +230,9 @@ void glcd_flush_text_row(uint8_t row) {
 // flush all text rows to the st7920
 void glcd_flush_text(void) {
 	glcd_set_text_mode();
-	flush_text_row(0);
-	flush_text_row(1);
-	flush_text_row(2);
-	flush_text_row(3);
+	for (uint8_t i = 0; i < GLCD_ROWS; i++) {
+		flush_text_row(i);
+	}
 }
 
 // clear a text row
@@ -274,7 +254,7 @@ void glcd_clear_text(bool flush) {
 }
 
 // write a string to the text buffer (no line wrapping)
-void glcd_puts(uint8_t row, uint8_t col, const char *s, bool flush) {
+void glcd_puts(uint8_t row, uint8_t col, const char *s) {
 	if (!valid_text_posn(row, col)) {
 		return;
 	}
@@ -283,24 +263,31 @@ void glcd_puts(uint8_t row, uint8_t col, const char *s, bool flush) {
 		*ptr++ = *s++;
 		col++;
 	}
-	if (flush) {
-		glcd_flush_text_row(row);
-	}
 }
 
 // write a character to the text buffer
-void glcd_putc(uint8_t row, uint8_t col, char c, bool flush) {
+void glcd_putc(uint8_t row, uint8_t col, char c) {
 	if (!valid_text_posn(row, col)) {
 		return;
 	}
 	glcd_tbuf[row][col] = c;
-	if (flush) {
-		glcd_flush_text_row(row);
-	}
 }
 
 //-----------------------------------------------------------------------------
 
+// clear the text and graphics buffers (optionally flush)
+void glcd_clear(bool flush) {
+	glcd_clear_text(flush);
+	glcd_clear_graphics(flush);
+}
+
+// flush the text and graphics buffers.
+void glcd_flush(void) {
+	glcd_flush_text();
+	glcd_flush_graphics();
+}
+
+// initialise the st7920
 void glcd_init(void) {
 	delay_ms(40);
 	glcdCommandPort = cmdFunctionSet(1, 0);
@@ -313,8 +300,7 @@ void glcd_init(void) {
 	delay_ms(11);
 	glcdCommandPort = cmdEntryMode(1, 0);
 
-	glcd_clear_text(false);
-	glcd_clear_graphics(false);
+	glcd_clear(false);
 }
 
 //-----------------------------------------------------------------------------
