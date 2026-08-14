@@ -19,6 +19,6 @@ C-code applications for the Z80 based [TEC-1G](https://github.com/MarkJelic/TEC-
  * Load the hex file, go to 0x4000, go ....
 
 # Dependencies
- * [sdcc](https://sdcc.sourceforge.net/) the small device c-compiler
+ * [sdcc](https://sdcc.sourceforge.net/) the small device c-compiler (tested with 4.2.0)
  * GNU Make
 

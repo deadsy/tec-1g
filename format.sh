@@ -6,6 +6,7 @@ FILES="
 ./examples/lcd_test/main.c
 ./examples/menu_test/main.c
 ./examples/rtc_test/main.c
+./examples/glcd_test/main.c
 ./include/array88.h
 ./include/delay.h
 ./include/display.h

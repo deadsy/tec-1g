@@ -125,12 +125,25 @@ void glcd_clear_graphics(bool flush) {
 	}
 }
 
-// plot a pixel in the graphics buffer
-void glcd_plot(uint8_t x, uint8_t y) {
+#define ROW_BIT(x) (1 << (7 - ((x) & 7)))
+
+// set(1) a pixel in the graphics buffer
+void glcd_set_pixel(uint8_t x, uint8_t y) {
 	if (!valid_graphics_posn(x, y)) {
 		return;
 	}
-	glcd_gbuf[(y * BYTES_PER_ROW) + (x >> 3)] |= 1 << (7 - (x & 7));
+	glcd_gbuf[(y * BYTES_PER_ROW) + (x >> 3)] |= ROW_BIT(x);
+}
+
+// get(0/1) a pixel from the graphics buffer
+uint8_t glcd_get_pixel(uint8_t x, uint8_t y) {
+	if (!valid_graphics_posn(x, y)) {
+		return 0;
+	}
+	if (glcd_gbuf[(y * BYTES_PER_ROW) + (x >> 3)] & ROW_BIT(x)) {
+		return 1;
+	}
+	return 0;
 }
 
 // plot a vertical line in the graphics buffer
@@ -143,7 +156,7 @@ void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x) {
 	}
 	// single pixel?
 	if (y0 == y1) {
-		glcd_plot(x, y0);
+		glcd_set_pixel(x, y0);
 		return;
 	}
 	if (!valid_graphics_posn(x, y0)) {
@@ -154,7 +167,7 @@ void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x) {
 		// clamp y1 to the edge
 		y1 = GLCD_PIXELS_V - 1;
 	}
-	uint8_t bit = 1 << (7 - (x & 7));
+	uint8_t bit = ROW_BIT(x);
 	uint16_t ofs = (y0 * BYTES_PER_ROW) + (x >> 3);
 	for (uint8_t i = y0; i <= y1; i++) {
 		glcd_gbuf[ofs] |= bit;
@@ -172,7 +185,7 @@ void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y) {
 	}
 	// single pixel?
 	if (x0 == x1) {
-		glcd_plot(x0, y);
+		glcd_set_pixel(x0, y);
 		return;
 	}
 	if (!valid_graphics_posn(x0, y)) {
