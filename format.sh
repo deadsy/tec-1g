@@ -18,6 +18,7 @@ FILES="
 ./include/rtc.h
 ./include/glcd.h
 ./include/memshow.h
+./include/fat.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -28,6 +29,7 @@ FILES="
 ./lib/rtc.c
 ./lib/glcd.c
 ./lib/memshow.c
+./lib/fat.c
 "
 
 for f in $FILES; do

@@ -13,6 +13,7 @@ OBJS = array88.rel \
 	rtc.rel \
 	memshow.rel \
 	glcd.rel \
+	fat.rel \
 	delay.rel
 
 CFLAGS = -mz80 \
