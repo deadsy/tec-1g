@@ -56,6 +56,7 @@ void menu_init(void);
 void menu_setup(struct menu *m, uint8_t rows, uint8_t cols, const struct menu_item *items);
 void menu_run(struct menu *m);
 void menu_about(struct menu *m, const char *title, const char *url);
+void menu_error(struct menu *m, const char *msg0, const char *msg1);
 
 //-----------------------------------------------------------------------------
 

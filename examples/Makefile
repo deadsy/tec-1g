@@ -6,6 +6,7 @@ all:
 	make -C menu_test $@
 	make -C rtc_test $@
 	make -C glcd_test $@
+	make -C sdcard_test $@
 
 .PHONY: clean
 clean:
@@ -15,3 +16,4 @@ clean:
 	make -C menu_test $@
 	make -C rtc_test $@
 	make -C glcd_test $@
+	make -C sdcard_test $@

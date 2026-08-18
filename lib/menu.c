@@ -133,6 +133,21 @@ void menu_about(struct menu *m, const char *title, const char *url) {
 
 //-----------------------------------------------------------------------------
 
+// display a generic error screen
+void menu_error(struct menu *m, const char *msg0, const char *msg1) {
+	lcd_clear();
+	if (msg0 != NULL) {
+		lcd_puts(0, 0, msg0);
+	}
+	if (msg1 != NULL) {
+		lcd_puts(1, 0, msg1);
+	}
+	lcd_putc(m->rows - 1, 0, LEFT_ARROW);
+	while (!key_exit()) ;
+}
+
+//-----------------------------------------------------------------------------
+
 // setup the menu with a menu item list
 void menu_setup(struct menu *m, uint8_t rows, uint8_t cols, const struct menu_item *items) {
 	uint8_t n = menu_length(items) - 1;	// watch out for empty menu item lists!

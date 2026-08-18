@@ -36,6 +36,13 @@ __sfr __at 0xff systemPort;	// System Latch
 #define rtcClock (1 << 6)	// D6
 #define rtcIn (1 << 7)		// D7, input TO rtc
 
+// sdCardPort
+#define sdMosiMask (1 << 0)	// D0 mosi (out)
+#define sdClockMask (1 << 1)	// D1 clock (out)
+#define sdSelectMask (1 << 2)	// D2 chip select (out, active low)
+#define sdDetectMask (1 << 6)	// D6 card detect (in)
+#define sdMisoMask (1 << 7)	// D7 miso (in)
+
 //-----------------------------------------------------------------------------
 #elif defined(HW_TEC_1)
 
