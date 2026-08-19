@@ -16,14 +16,14 @@ SD Card Driver
 //-----------------------------------------------------------------------------
 // command responses
 
-#define rsp1Success  0		// success/ready
-#define rsp1Idle  (1 << 0)	// in idle state
-#define rsp1EraseReset  (1 << 1)	// erase reset
-#define rsp1IllegalCommand  (1 << 2)	// illegal command
-#define rsp1ComCRCError  (1 << 3)	// com crc error
-#define rsp1EraseSequenceError  (1 << 4)	// erase sequence error
-#define rsp1AddressError  (1 << 5)	// address error
-#define rsp1ParameterError  (1 << 6)	// parameter error
+#define rsp1Success 0		// success/ready
+#define rsp1Idle (1 << 0)	// in idle state
+#define rsp1EraseReset (1 << 1)	// erase reset
+#define rsp1IllegalCommand (1 << 2)	// illegal command
+#define rsp1ComCRCError (1 << 3)	// com crc error
+#define rsp1EraseSequenceError (1 << 4)	// erase sequence error
+#define rsp1AddressError (1 << 5)	// address error
+#define rsp1ParameterError (1 << 6)	// parameter error
 
 //-----------------------------------------------------------------------------
 // pre-canned commands
@@ -47,24 +47,30 @@ static uint8_t sdPortShadow;
 // select the spi device (control the chip select line)
 static void spi_select(bool state) {
 	if (state) {
-		// selected, cs is low
-		sdPortShadow &= ~sdSelectMask;
+		// cs=0, mosi=1, clk=0
+		sdPortShadow = sdMosiMask;
 	} else {
-		// not selected, cs is high
-		sdPortShadow |= sdSelectMask;
+		// cs=1, mosi=1, clk=0
+		sdPortShadow = sdSelectMask | sdMosiMask;
 	}
 	sdCardPort = sdPortShadow;
 }
 
-// transfer n bytes in/out of the spi interface
-static void spi_xfer(uint8_t *rx, const uint8_t *tx, uint8_t n) {
-	// assume CPOL = 0, CPHA = 0
+static inline void spi_clock(void) {
+	// clock high
+	sdCardPort = sdPortShadow | sdClockMask;
+	// clock low
+	sdCardPort = sdPortShadow;
+}
+
+static inline uint8_t sd_miso(void) {
+	return (sdCardPort & sdMisoMask) ? 1 : 0;
+}
+
+// tx n bytes to the spi device
+static inline void spi_tx(const uint8_t *tx, uint8_t n) {
 	for (uint8_t i = 0; i < n; i++) {
-		uint8_t rx_byte = 0;
-		uint8_t tx_byte = 0xff;
-		if (tx != NULL) {
-			tx_byte = tx[i];
-		}
+		uint8_t tx_byte = tx[i];
 		for (uint8_t j = 0; j < 8; j++) {
 			// CPHA = 0, MOSI setup before rising edge
 			// write MOSI (d7 thru d0)
@@ -75,34 +81,27 @@ static void spi_xfer(uint8_t *rx, const uint8_t *tx, uint8_t n) {
 			}
 			sdCardPort = sdPortShadow;
 			tx_byte <<= 1;
-			// CPOL = 0, clock idles low
-			// clock high
-			sdCardPort = sdPortShadow | sdClockMask;
-			// clock low
-			sdCardPort = sdPortShadow;
-			// CPHA = 0, MISO read after falling edge
-			// read MISO (d7 thru d0)
-			uint8_t miso = (sdCardPort & sdMisoMask) ? 1 : 0;
-			rx_byte = (rx_byte << 1) | miso;
-		}
-		if (rx != NULL) {
-			rx[i] = rx_byte;
+			spi_clock();
 		}
 	}
-}
-
-// tx n bytes to the spi device
-static inline void spi_tx(const uint8_t *tx, uint8_t n) {
-	spi_xfer(NULL, tx, n);
+	// set MOSI=1
+	sdPortShadow |= sdMosiMask;
 }
 
 // rx n bytes from the spi device
 static inline void spi_rx(uint8_t *rx, uint8_t n) {
-	spi_xfer(rx, NULL, n);
-}
-
-static inline void spi_tx_byte(uint8_t val) {
-	spi_tx(&val, 1);
+	// Note: The first MISO response bit was set on the
+	// last falling clock edge from the previous write,
+	// so we sample it *before* we cycle the clock.
+	for (uint8_t i = 0; i < n; i++) {
+		uint8_t rx_byte = sd_miso();
+		for (uint8_t j = 0; j < 7; j++) {
+			spi_clock();
+			rx_byte = (rx_byte << 1) | sd_miso();
+		}
+		rx[i] = rx_byte;
+		spi_clock();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -112,39 +111,62 @@ static bool sd_detect(void) {
 	return (sdCardPort & sdDetectMask) != 0;
 }
 
-static void sd_command(const uint8_t *cmd, uint8_t *rsp, uint8_t n) {
+static int8_t sd_command(const uint8_t *cmd, uint8_t *rsp, uint8_t n) {
+	int8_t rc = 0;
 	spi_select(true);
 	spi_tx(cmd, CMD_LEN);
-	spi_rx(rsp, n);
+	// get the response
+	bool good = false;
+	uint8_t val = 0;
+	for (uint8_t i = 0; i < 10; i++) {
+		spi_rx(&val, 1);
+		if (val != 0xff) {
+			good = true;
+			break;
+		}
+	}
+	if (good) {
+		rsp[0] = val;
+		// get the rest of the response bytes (if any)
+		if (n > 1) {
+			spi_rx(&rsp[1], n - 1);
+		}
+	} else {
+		rc = SD_ERR_TIMEOUT;
+	}
 	spi_select(false);
-	// 8 clock cycles to help the sd card reset command state
-	//spi_tx_byte(0xff);
+	// 8 clock cycles to help the sd card go back to command state
+	for (uint8_t i = 0; i < 8; i++) {
+		spi_clock();
+	}
+	return rc;
 }
 
 //-----------------------------------------------------------------------------
 
 int8_t sd_init(void) {
+	uint8_t rsp[8];
+	int8_t rc;
 
 	if (!sd_detect()) {
 		return SD_ERR_NO_CARD;
 	}
 
-	sdPortShadow = sdMosiMask;	// MOSI idles high
-	spi_select(false);
-
 	// Get the sd-card into a good initial state.
 	// Run 80 spi clock cycles (while not selected).
-	for (uint8_t i = 0; i < 10; i++) {
-		spi_tx_byte(0xff);
+	spi_select(false);
+	for (uint8_t i = 0; i < 80; i++) {
+		spi_clock();
 	}
 
 	// reset the card
 	bool reset = false;
 	for (uint8_t i = 0; i < 10; i++) {
-		uint8_t rsp;
-		sd_command(cmd0, &rsp, 1);
-
-		if (rsp == rsp1Idle) {
+		rc = sd_command(cmd0, rsp, 1);
+		if (rc != 0) {
+			return rc;
+		}
+		if (rsp[0] == rsp1Idle) {
 			reset = true;
 			break;
 		}
@@ -152,6 +174,15 @@ int8_t sd_init(void) {
 	}
 	if (!reset) {
 		return SD_ERR_RESET_FAIL;
+	}
+
+	// get the card version
+	rc = sd_command(cmd8, rsp, 5);
+	if (rc != 0) {
+		return rc;
+	}
+	if (rsp[0] != rsp1Success) {
+		return SD_ERR_VERSION_FAIL;
 	}
 
 	return 0;

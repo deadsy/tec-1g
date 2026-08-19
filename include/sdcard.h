@@ -17,6 +17,8 @@ SD Card Driver
 
 #define SD_ERR_NO_CARD -1	// no card detected
 #define SD_ERR_RESET_FAIL -2	// can't reset card
+#define SD_ERR_TIMEOUT -3	// operation timeout
+#define SD_ERR_VERSION_FAIL -4	// get card version failed
 
 //-----------------------------------------------------------------------------
 
