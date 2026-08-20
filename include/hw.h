@@ -29,6 +29,10 @@ __sfr __at 0xfd sdCardPort;	// GPIO SD Card
 __sfr __at 0xfe keyboardPort;	// Matrix Keyboard Input
 __sfr __at 0xff systemPort;	// System Latch
 
+// note: not a real port, but useful for dumping debug values in emulation
+// eg: testPort = val;
+__sfr __at 0xaa testPort;
+
 // rtcPort
 #define rtcOut (1 << 0)		// D0, output FROM rtc
 #define rtcChipEnable (1 << 4)	// D4, active high

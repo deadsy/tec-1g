@@ -56,10 +56,11 @@ static void spi_select(bool state) {
 	sdCardPort = sdPortShadow;
 }
 
-static inline void spi_clock(void) {
-	// clock high
+static inline void spi_clock_hi(void) {
 	sdCardPort = sdPortShadow | sdClockMask;
-	// clock low
+}
+
+static inline void spi_clock_lo(void) {
 	sdCardPort = sdPortShadow;
 }
 
@@ -72,7 +73,7 @@ static inline void spi_tx(const uint8_t *tx, uint8_t n) {
 	for (uint8_t i = 0; i < n; i++) {
 		uint8_t tx_byte = tx[i];
 		for (uint8_t j = 0; j < 8; j++) {
-			// CPHA = 0, MOSI setup before rising edge
+			// MOSI setup before rising edge
 			// write MOSI (d7 thru d0)
 			if (tx_byte & 0x80) {
 				sdPortShadow |= sdMosiMask;
@@ -81,7 +82,9 @@ static inline void spi_tx(const uint8_t *tx, uint8_t n) {
 			}
 			sdCardPort = sdPortShadow;
 			tx_byte <<= 1;
-			spi_clock();
+			// cycle the clock
+			spi_clock_hi();
+			spi_clock_lo();
 		}
 	}
 	// set MOSI=1
@@ -90,17 +93,16 @@ static inline void spi_tx(const uint8_t *tx, uint8_t n) {
 
 // rx n bytes from the spi device
 static inline void spi_rx(uint8_t *rx, uint8_t n) {
-	// Note: The first MISO response bit was set on the
-	// last falling clock edge from the previous write,
-	// so we sample it *before* we cycle the clock.
+	// Note: The next MISO response bit was clocked out on the
+	// last falling clock edge from the previous operation.
 	for (uint8_t i = 0; i < n; i++) {
-		uint8_t rx_byte = sd_miso();
-		for (uint8_t j = 0; j < 7; j++) {
-			spi_clock();
+		uint8_t rx_byte = 0;
+		for (uint8_t j = 0; j < 8; j++) {
+			spi_clock_hi();
 			rx_byte = (rx_byte << 1) | sd_miso();
+			spi_clock_lo();
 		}
 		rx[i] = rx_byte;
-		spi_clock();
 	}
 }
 
@@ -137,7 +139,8 @@ static int8_t sd_command(const uint8_t *cmd, uint8_t *rsp, uint8_t n) {
 	spi_select(false);
 	// 8 clock cycles to help the sd card go back to command state
 	for (uint8_t i = 0; i < 8; i++) {
-		spi_clock();
+		spi_clock_hi();
+		spi_clock_lo();
 	}
 	return rc;
 }
@@ -156,7 +159,8 @@ int8_t sd_init(void) {
 	// Run 80 spi clock cycles (while not selected).
 	spi_select(false);
 	for (uint8_t i = 0; i < 80; i++) {
-		spi_clock();
+		spi_clock_hi();
+		spi_clock_lo();
 	}
 
 	// reset the card
@@ -181,7 +185,7 @@ int8_t sd_init(void) {
 	if (rc != 0) {
 		return rc;
 	}
-	if (rsp[0] != rsp1Success) {
+	if ((rsp[0] != rsp1Success) || (rsp[1] != 0) || (rsp[4] != 0xaa)) {
 		return SD_ERR_VERSION_FAIL;
 	}
 
