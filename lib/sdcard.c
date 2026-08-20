@@ -7,7 +7,6 @@ SD Card Driver
 //-----------------------------------------------------------------------------
 
 #include <string.h>
-#include <stdbool.h>
 
 #include "sdcard.h"
 #include "hw.h"
@@ -38,6 +37,11 @@ static const uint8_t cmd24[CMD_LEN] = { 0x58, 0, 0, 0, 0, 1 };	// write single b
 static const uint8_t cmd55[CMD_LEN] = { 0x77, 0, 0, 0, 0, 1 };	// APP_CMD, R1
 static const uint8_t cmd58[CMD_LEN] = { 0x7A, 0, 0, 0, 0, 1 };	// READ_OCR, R3
 static const uint8_t acmd41[CMD_LEN] = { 0x69, 0x40, 0, 0, 0, 1 };	// send_OP_COND, R1
+
+//-----------------------------------------------------------------------------
+
+// card is SDHC (high capacity), uses block addressing
+static bool sdHighCapacity;
 
 //-----------------------------------------------------------------------------
 // SPI bus operations
@@ -189,7 +193,74 @@ int8_t sd_init(void) {
 		return SD_ERR_VERSION_FAIL;
 	}
 
+	// check the card is idle
+	bool idle = false;
+	for (uint8_t i = 0; i < 10; i++) {
+		rc = sd_command(cmd55, rsp, 1);
+		if (rc != 0) {
+			return rc;
+		}
+		rc = sd_command(acmd41, rsp, 1);
+		if (rc != 0) {
+			return rc;
+		}
+		if (rsp[0] == rsp1Success) {
+			idle = true;
+			break;
+		}
+		delay_ms(20);
+	}
+	if (!idle) {
+		return SD_ERR_IDLE_FAIL;
+	}
+
+	// read the ocr (operation condition register)
+	bool ocr = false;
+	sdHighCapacity = false;
+	for (uint8_t i = 0; i < 10; i++) {
+		rc = sd_command(cmd58, rsp, 5);
+		if (rc != 0) {
+			return rc;
+		}
+		if ((rsp[0] == rsp1Success) && ((rsp[1] & 0x80) != 0)) {
+			// card is not busy, sdhc or sdsc?
+			sdHighCapacity = (rsp[1] & 0x40) != 0;
+			ocr = true;
+			break;
+		}
+		delay_ms(20);
+	}
+	if (!ocr) {
+		return SD_ERR_OCR_FAIL;
+	}
+
+	// if we have SDSC, set the block length
+	if (!sdHighCapacity) {
+		rc = sd_command(cmd16, rsp, 1);
+		if (rc != 0) {
+			return rc;
+		}
+		if (rsp[0] != rsp1Success) {
+			return SD_ERR_BLOCK_LENGTH_FAIL;
+		}
+	}
+
 	return 0;
+}
+
+//-----------------------------------------------------------------------------
+// fat32 api
+
+bool sd_read(uint8_t *buf, uint32_t sect) {
+	(void)buf;
+	(void)sect;
+	return false;
+}
+
+bool sd_write(const uint8_t *buf, uint32_t sect) {
+	(void)buf;
+	(void)sect;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
