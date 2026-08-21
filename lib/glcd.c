@@ -229,6 +229,18 @@ void glcd_box(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
 	glcd_vline(y0, y1, x1);
 }
 
+// plot an 8x8 bitmap at a byte aligned position.
+void glcd_bmp88(uint8_t x, uint8_t y, const uint8_t *bmp) {
+	if (!valid_graphics_posn(x, y)) {
+		return;
+	}
+	uint16_t ofs = (y * BYTES_PER_ROW) + (x >> 3);
+	for (uint8_t i = 0; i < 8; i++) {
+		glcd_gbuf[ofs] = bmp[i];
+		ofs += BYTES_PER_ROW;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Text (ddram) operations.
 // Text operations write to a RAM buffer (glcd_tbuf).

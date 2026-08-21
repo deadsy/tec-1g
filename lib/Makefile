@@ -15,6 +15,7 @@ OBJS = array88.rel \
 	glcd.rel \
 	fat.rel \
 	sdcard.rel \
+	font.rel \
 	delay.rel
 
 CFLAGS = -mz80 \

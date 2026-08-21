@@ -21,6 +21,7 @@ FILES="
 ./include/memshow.h
 ./include/fat.h
 ./include/sdcard.h
+./include/font.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -33,6 +34,7 @@ FILES="
 ./lib/memshow.c
 ./lib/fat.c
 ./lib/sdcard.c
+./lib/font.c
 "
 
 for f in $FILES; do

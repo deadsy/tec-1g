@@ -15,6 +15,7 @@ Graphics LCD Test Code
 #include "glcd.h"
 #include "scroll.h"
 #include "delay.h"
+#include "font.h"
 
 //-----------------------------------------------------------------------------
 
@@ -246,6 +247,22 @@ static void ca_test(struct menu *m) {
 
 //-----------------------------------------------------------------------------
 
+// show an 8x8 graphical font
+static void font88_test(struct menu *m) {
+	(void)m;
+	glcd_clear(false);
+	for (uint8_t i = 0; i < 128; i++) {
+		uint8_t x = (i & 15) << 3;
+		uint8_t y = (i >> 4) << 3;
+		glcd_bmp88(x, y, get_glyph(i + 0x20));
+	}
+	glcd_flush();
+	while (!key_exit()) ;
+	glcd_clear(true);
+}
+
+//-----------------------------------------------------------------------------
+
 static void about(struct menu *m) {
 	menu_about(m, "st7920 glcd test", "https://github.com/deadsy/tec-1g" URL_PAD);
 }
@@ -257,6 +274,7 @@ static const struct menu_item root_items[] = {
 	{"vline", vline_test},
 	{"box", box_test},
 	{"1dca", ca_test},
+	{"font88", font88_test},
 	{"about", about},
 	MENU_EOL,
 };

@@ -34,15 +34,14 @@ void glcd_init(void);
 void glcd_set_graphics_mode(void);
 void glcd_clear_graphics(bool flush);
 void glcd_flush_graphics(void);
-
 void glcd_set_pixel(uint8_t x, uint8_t y);
 uint8_t glcd_get_pixel(uint8_t x, uint8_t y);
-
 void glcd_vline(uint8_t y0, uint8_t y1, uint8_t x);
 void glcd_hline(uint8_t x0, uint8_t x1, uint8_t y);
 void glcd_box(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+void glcd_bmp88(uint8_t x, uint8_t y, const uint8_t * bmp);
 
-// text
+// text (on chip 8x16 font)
 void glcd_set_text_mode(void);
 void glcd_clear_text_row(uint8_t row, bool flush);
 void glcd_clear_text(bool flush);
