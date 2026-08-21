@@ -2,9 +2,9 @@ TOP = $(shell realpath ../..)
 
 TARGET = out
 
-STACK = 0x7ffe
-CODE = 0x4000
-DATA = 0x6000
+STACK ?= 0x7ffe
+CODE ?= 0x4000
+DATA ?= 0x6000
 
 OBJS = entry.rel main.rel
 

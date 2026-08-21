@@ -134,7 +134,7 @@ typedef struct {
 //------------------------------------------------------------------------------
 static Fat *g_fat_list;
 
-static uint8_t g_lfn_indices[13] = { 1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30 };
+static const uint8_t g_lfn_indices[13] = { 1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30 };
 
 static uint8_t g_buf[512];
 static uint16_t g_len;

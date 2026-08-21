@@ -13,6 +13,13 @@ SD Card Driver
 #include "delay.h"
 
 //-----------------------------------------------------------------------------
+
+#define BLOCK_LENGTH 512
+
+#define blockBusy 0xff		// getting the block data ...
+#define blockStart 0xfe		// starting the block data
+
+//-----------------------------------------------------------------------------
 // command responses
 
 #define rsp1Success 0		// success/ready
@@ -28,11 +35,11 @@ SD Card Driver
 // pre-canned commands
 
 #define CMD_LEN 6
+#define CMD(x) (0x40 | (x))
 
 static const uint8_t cmd0[CMD_LEN] = { 0x40, 0, 0, 0, 0, 0x95 };	// reset, R1
 static const uint8_t cmd8[CMD_LEN] = { 0x48, 0, 0, 1, 0xaa, 0x87 };	// send_if_cond, R7
 static const uint8_t cmd16[CMD_LEN] = { 0x50, 0, 0, 2, 0, 1 };	// Set sector size to 512 bytes, R1
-static const uint8_t cmd17[CMD_LEN] = { 0x51, 0, 0, 0, 0, 1 };	// read single block, R1
 static const uint8_t cmd24[CMD_LEN] = { 0x58, 0, 0, 0, 0, 1 };	// write single block, R1
 static const uint8_t cmd55[CMD_LEN] = { 0x77, 0, 0, 0, 0, 1 };	// APP_CMD, R1
 static const uint8_t cmd58[CMD_LEN] = { 0x7A, 0, 0, 0, 0, 1 };	// READ_OCR, R3
@@ -73,8 +80,8 @@ static inline uint8_t sd_miso(void) {
 }
 
 // tx n bytes to the spi device
-static inline void spi_tx(const uint8_t *tx, uint8_t n) {
-	for (uint8_t i = 0; i < n; i++) {
+static inline void spi_tx(const uint8_t *tx, uint16_t n) {
+	for (uint16_t i = 0; i < n; i++) {
 		uint8_t tx_byte = tx[i];
 		for (uint8_t j = 0; j < 8; j++) {
 			// MOSI setup before rising edge
@@ -96,10 +103,10 @@ static inline void spi_tx(const uint8_t *tx, uint8_t n) {
 }
 
 // rx n bytes from the spi device
-static inline void spi_rx(uint8_t *rx, uint8_t n) {
+static inline void spi_rx(uint8_t *rx, uint16_t n) {
 	// Note: The next MISO response bit was clocked out on the
 	// last falling clock edge from the previous operation.
-	for (uint8_t i = 0; i < n; i++) {
+	for (uint16_t i = 0; i < n; i++) {
 		uint8_t rx_byte = 0;
 		for (uint8_t j = 0; j < 8; j++) {
 			spi_clock_hi();
@@ -252,14 +259,60 @@ int8_t sd_init(void) {
 // fat32 api
 
 bool sd_read(uint8_t *buf, uint32_t sect) {
-	(void)buf;
-	(void)sect;
-	return false;
+	uint8_t cmd[CMD_LEN];
+	uint8_t rsp;
+
+	// setup cmd17 - read single block
+	uint32_t arg = sect;
+	if (!sdHighCapacity) {
+		// we need a byte address for SDSC
+		arg *= BLOCK_LENGTH;
+	}
+	cmd[0] = CMD(17);
+	cmd[1] = (arg >> 24);
+	cmd[2] = (arg >> 16) & 0xff;
+	cmd[3] = (arg >> 8) & 0xff;
+	cmd[4] = arg;
+	cmd[5] = 1;
+
+	// send CMD17
+	uint8_t rc = sd_command(cmd, &rsp, 1);
+	if ((rc != 0) || (rsp != rsp1Success)) {
+		return false;
+	}
+
+	// wait for something other than block busy
+	spi_select(true);
+	do {
+		spi_rx(&rsp, 1);
+	} while (rsp == blockBusy);
+
+	// are we getting the block data?
+	if (rsp != blockStart) {
+		// no... some sort of io error
+		spi_select(false);
+		return false;
+	}
+
+	// get the block data
+	spi_rx(buf, BLOCK_LENGTH);
+
+	// get the block crc
+	uint8_t crc[2];
+	spi_rx(crc, sizeof(crc));
+	spi_select(false);
+
+	// TODO check the CRC
+
+	return true;
 }
 
 bool sd_write(const uint8_t *buf, uint32_t sect) {
 	(void)buf;
 	(void)sect;
+
+	testPort = 0xbb;
+
 	return false;
 }
 
