@@ -16,6 +16,7 @@ OBJS = array88.rel \
 	fat.rel \
 	sdcard.rel \
 	font.rel \
+	term.rel \
 	delay.rel
 
 CFLAGS = -mz80 \

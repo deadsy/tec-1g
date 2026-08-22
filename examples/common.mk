@@ -4,7 +4,7 @@ TARGET = out
 
 STACK ?= 0x7ffe
 CODE ?= 0x4000
-DATA ?= 0x6000
+DATA ?= 0x7000
 
 OBJS = entry.rel main.rel
 
@@ -37,6 +37,7 @@ clean:
 	-rm $(TARGET).lk
 	-rm $(TARGET).map
 	-rm $(TARGET).noi
+	-rm *.ihx
 	-rm *.rel
 	-rm *.lst
 	-rm *.sym

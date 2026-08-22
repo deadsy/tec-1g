@@ -1,3 +1,4 @@
+*.ihx
 *.rel
 *.asm
 *.lst

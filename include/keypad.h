@@ -48,6 +48,7 @@ uint8_t key_code(void);
 
 // helpers
 bool key_exit(void);
+uint8_t key_ascii(uint8_t code);
 
 //-----------------------------------------------------------------------------
 

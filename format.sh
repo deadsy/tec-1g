@@ -8,6 +8,7 @@ FILES="
 ./examples/rtc_test/main.c
 ./examples/glcd_test/main.c
 ./examples/sdcard_test/main.c
+./examples/term_test/main.c
 ./include/array88.h
 ./include/delay.h
 ./include/display.h
@@ -22,6 +23,7 @@ FILES="
 ./include/fat.h
 ./include/sdcard.h
 ./include/font.h
+./include/term.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -35,6 +37,7 @@ FILES="
 ./lib/fat.c
 ./lib/sdcard.c
 ./lib/font.c
+./lib/term.c
 "
 
 for f in $FILES; do
