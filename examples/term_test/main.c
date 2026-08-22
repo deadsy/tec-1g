@@ -17,9 +17,16 @@ GLCD Terminal Test Code
 
 //-----------------------------------------------------------------------------
 
-static void term_test(struct menu *m) {
-	(void)m;
-	term_init(true);
+static void terminal_test(struct menu *m) {
+
+	lcd_clear();
+	lcd_puts(0, 0, "terminal");
+	lcd_puts(1, 0, "addr/esc to exit");
+	lcd_putc(m->rows - 1, 0, LEFT_ARROW);
+
+	// cursor + wrap
+	term_init(true, true);
+
 	while (true) {
 		if (key_down()) {
 			uint8_t code = key_code();
@@ -40,7 +47,7 @@ static void about(struct menu *m) {
 }
 
 static const struct menu_item root_items[] = {
-	{"terminal", term_test},
+	{"terminal", terminal_test},
 	{"about", about},
 	MENU_EOL,
 };

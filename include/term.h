@@ -15,7 +15,7 @@ GLCD Terminal
 
 //-----------------------------------------------------------------------------
 
-void term_init(bool wrap);
+void term_init(bool cursor, bool wrap);
 void term_flush(void);
 void term_putc(char c);
 void term_puts(const char *s);
