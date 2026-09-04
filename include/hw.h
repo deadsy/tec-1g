@@ -33,6 +33,16 @@ __sfr __at 0xff systemPort;	// System Latch
 // eg: testPort = val;
 __sfr __at 0xaa testPort;
 
+// simpPort
+#define simpConfigK (1 << 0)	// D0, 0 == encoder, 1 == matrix
+#define simpConfigP (1 << 1)	// D1, 1 == protect memory
+#define simpConfigE (1 << 2)	// D2, expansion low/high
+#define simpExpand (1 << 3)	// D3
+#define simpCart  (1 << 4)	// D4
+#define simpGimp (1 << 5)	// D5
+#define simpKDA (1 << 6)	// D6, active low
+#define serialRxMask (1 << 7)	// D7
+
 // rtcPort
 #define rtcOut (1 << 0)		// D0, output FROM rtc
 #define rtcChipEnable (1 << 4)	// D4, active high
