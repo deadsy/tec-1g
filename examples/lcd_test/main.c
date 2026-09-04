@@ -10,6 +10,7 @@ LCD Test Code
 
 #include "lcd.h"
 #include "scroll.h"
+#include "delay.h"
 
 //-----------------------------------------------------------------------------
 
@@ -44,14 +45,9 @@ int main(void) {
 	lcd_putc(1, 10, '1');
 	lcd_putc(2, 10, '2');
 
-	scroll_output(&s, buf);
-
-	int n = 0;
 	while (1) {
-		n++;
-		if ((n & ((1 << 14) - 1)) == 0) {
-			scroll_update(&s, buf);
-		}
+		delay_10ms(30);
+		scroll_update(&s, buf);
 	}
 }
 

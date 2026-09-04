@@ -19,6 +19,7 @@ void delay_75us(void);
 void delay_125us(void);
 void delay_1ms(void);
 void delay_ms(uint8_t n);
+void delay_10ms(uint8_t n);
 void delay_500ms(void);
 void delay_1s(void);
 
