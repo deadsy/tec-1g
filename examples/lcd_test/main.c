@@ -46,7 +46,7 @@ int main(void) {
 	lcd_putc(2, 10, '2');
 
 	while (1) {
-		delay_10ms(30);
+		delay_ms(300);
 		scroll_update(&s, buf);
 	}
 }

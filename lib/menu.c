@@ -126,7 +126,7 @@ void menu_about(struct menu *m, const char *title, const char *url) {
 	};
 
 	while (!key_exit()) {
-		delay_10ms(30);
+		delay_ms(300);
 		scroll_update(&s, buf);
 	}
 }
