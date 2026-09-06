@@ -133,6 +133,7 @@ static inline void speaker_lo(void) {
 void play_square(uint16_t inc, uint16_t duty, uint16_t cycles) {
 	uint16_t ofs = 0;
 	bool hi = true;
+	speaker_hi();
 	while (cycles > 0) {
 		if (ofs < duty) {
 			if (!hi) {
@@ -148,6 +149,7 @@ void play_square(uint16_t inc, uint16_t duty, uint16_t cycles) {
 		ofs += inc;
 		cycles--;
 	}
+	speaker_lo();
 }
 
 //-----------------------------------------------------------------------------
