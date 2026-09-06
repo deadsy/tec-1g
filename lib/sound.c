@@ -132,18 +132,18 @@ static inline void speaker_lo(void) {
 
 void play_square(uint16_t inc, uint16_t duty, uint16_t cycles) {
 	uint16_t ofs = 0;
-	bool hi = true;
-	speaker_hi();
+	bool hi = false;
+	speaker_lo();
 	while (cycles > 0) {
-		if (ofs < duty) {
-			if (!hi) {
-				hi = true;
-				speaker_hi();
-			}
-		} else {
+		if (ofs <= duty) {
 			if (hi) {
 				speaker_lo();
 				hi = false;
+			}
+		} else {
+			if (!hi) {
+				hi = true;
+				speaker_hi();
 			}
 		}
 		ofs += inc;
@@ -154,9 +154,18 @@ void play_square(uint16_t inc, uint16_t duty, uint16_t cycles) {
 
 //-----------------------------------------------------------------------------
 
+// a rest note: play_square holds the speaker low for the whole duration.
 void play_note(uint8_t note, uint16_t duration) {
+	if (duration == 0) {
+		return;
+	}
+	if (note == NOTE_REST) {
+		// duty of 0xffff keeps ofs <= duty always true => speaker stays low
+		play_square(0, 0xffff, duration);
+		return;
+	}
 	int16_t inc = midi_to_increment(note);
-	if ((inc < 0) || (duration == 0)) {
+	if (inc < 0) {
 		return;
 	}
 	play_square(inc, 32768, duration);

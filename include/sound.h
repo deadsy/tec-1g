@@ -15,6 +15,11 @@ Sound Generation
 
 //-----------------------------------------------------------------------------
 
+// a rest: play_note holds the speaker low for the whole duration.
+#define NOTE_REST 0xff
+
+//-----------------------------------------------------------------------------
+
 void play_note(uint8_t note, uint16_t duration);
 void play_tune(uint8_t * tune);
 void play_square(uint16_t inc, uint16_t duty, uint16_t cycles);
