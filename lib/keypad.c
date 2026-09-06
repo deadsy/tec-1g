@@ -35,7 +35,7 @@ static bool key_data_available(void) {
 	return (simpPort & simpKDA) == 0;
 }
 
-// ius the shift key being pressed for this key code?
+// is the shift key pressed for this key code?
 static inline bool shift_key(uint8_t code) {
 	return (code & KEYPAD_Shift) == 0;
 }

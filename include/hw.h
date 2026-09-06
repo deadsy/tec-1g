@@ -33,6 +33,12 @@ __sfr __at 0xff systemPort;	// System Latch
 // eg: testPort = val;
 __sfr __at 0xaa testPort;
 
+// digitPort
+#define digitMask 0x3f		// D0..D5, digits
+#define serialTxMask (1 << 6)	// D6, serialTx
+#define discoMask (1 << 6)	// D6, select disco leds
+#define speakerMask (1 << 7)	// D7, speaker/led
+
 // simpPort
 #define simpConfigK (1 << 0)	// D0, 0 == encoder, 1 == matrix
 #define simpConfigP (1 << 1)	// D1, 1 == protect memory

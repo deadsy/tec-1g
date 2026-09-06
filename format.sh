@@ -24,6 +24,7 @@ FILES="
 ./include/sdcard.h
 ./include/font.h
 ./include/term.h
+./include/sound.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -38,6 +39,7 @@ FILES="
 ./lib/sdcard.c
 ./lib/font.c
 ./lib/term.c
+./lib/sound.c
 "
 
 for f in $FILES; do
