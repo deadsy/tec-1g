@@ -54,12 +54,13 @@ B
 
 static void wr_command(uint8_t cmd) {
 	glcdCommandPort = cmd;
-	while ((glcdCommandPort & BUSYFLAG) != 0) ;
+	delay_75us();
+	//while ((glcdCommandPort & BUSYFLAG) != 0) ;
 }
 
 static void wr_data(uint8_t val) {
 	glcdDataPort = val;
-	while ((glcdCommandPort & BUSYFLAG) != 0) ;
+	//while ((glcdCommandPort & BUSYFLAG) != 0) ;
 }
 
 //-----------------------------------------------------------------------------
