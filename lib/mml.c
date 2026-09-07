@@ -29,6 +29,20 @@ https://en.wikipedia.org/wiki/Music_Macro_Language
 
 //-----------------------------------------------------------------------------
 
+struct mml_note {
+	uint8_t note;
+	uint16_t duration;
+};
+
+struct mml_state {
+	const char *song;	// cursor into the tune string
+	uint8_t octave;		// current octave (0..8), middle C == octave 4
+	uint8_t length;		// default note length (1,2,4,8,16,32)
+	uint16_t tempo;		// tempo in beats (quarter notes) per minute
+};
+
+//-----------------------------------------------------------------------------
+
 // semitone offset from C for note letters A..G
 static const uint8_t note_semitone[7] = {
 	9,			// A
@@ -89,7 +103,7 @@ static uint16_t note_duration(struct mml_state *mml, uint16_t length) {
 
 // get the next mml note.
 // return 1 on a note, 0 at end of song, -1 on error.
-int8_t mml_next(struct mml_state *mml, struct mml_note *note) {
+static int8_t mml_next(struct mml_state *mml, struct mml_note *note) {
 	if ((mml == NULL) || (note == NULL) || (mml->song == NULL)) {
 		return -1;
 	}
@@ -194,8 +208,8 @@ int8_t mml_next(struct mml_state *mml, struct mml_note *note) {
 
 //-----------------------------------------------------------------------------
 
-// initialise the mml parser
-int8_t mml_init(struct mml_state *mml, const char *song) {
+// initialise the mml parser for the given song. returns -1 on bad args.
+static int8_t mml_init(struct mml_state *mml, const char *song) {
 	if ((mml == NULL) || (song == NULL) || (*song == 0)) {
 		return -1;
 	}
@@ -204,7 +218,29 @@ int8_t mml_init(struct mml_state *mml, const char *song) {
 	mml->octave = OCTAVE_DEFAULT;
 	mml->length = LENGTH_DEFAULT;
 	mml->tempo = TEMPO_DEFAULT;
+	return 0;
+}
 
+//-----------------------------------------------------------------------------
+
+// play_note() takes a duration as a loop-cycle count
+// mml_next() returns milliseconds.
+// This is the conversion factor.
+// by experiment: 50000 -> 2.368s
+// So: 50000/2368 ~ 21
+
+#define MS_TO_CYCLES 21
+
+// play an mml song
+int8_t mml_play(const char *song) {
+	struct mml_state s;
+	if (mml_init(&s, song) != 0) {
+		return -1;
+	}
+	struct mml_note note;
+	while (mml_next(&s, &note) == 1) {
+		play_note(note.note, note.duration * MS_TO_CYCLES);
+	}
 	return 0;
 }
 

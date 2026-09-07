@@ -2,15 +2,11 @@
 
 import math
 
-k5 = 196.0 / 1000.0
-k6 = 400.0 / 2000.0
-k7 = 790.0 / 4000.0
+# experiments: Hz vs increment
 
-print(f"{k5}")
-print(f"{k6}")
-print(f"{k7}")
-
-K = 0.198  # by experiment
+# K = 718.0 / 2222.0
+# K = 444.0 / 1362.0
+K = 0.3245
 
 def freq_to_increment(f):
     """convert the frequency to a table increment"""

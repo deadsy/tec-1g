@@ -20,9 +20,8 @@ Sound Generation
 
 //-----------------------------------------------------------------------------
 
+void play_square(uint16_t freq, uint16_t duty, uint16_t cycles);
 void play_note(uint8_t note, uint16_t duration);
-void play_tune(uint8_t * tune);
-void play_square(uint16_t inc, uint16_t duty, uint16_t cycles);
 
 //-----------------------------------------------------------------------------
 
