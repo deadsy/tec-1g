@@ -211,7 +211,7 @@ static void encode_timestamp(uint16_t *date, uint16_t *time) {
 	fat_get_timestamp(&ts);
 
 	*date = ((ts.year - 1980) & 0x3f) << 9 | (ts.month & 0xf) << 5 | (ts.day & 0x1f);
-	*time = ((ts.sec / 2) & 0x1f) | (ts.min & 0x3f) << 5 | (ts.hour & 0x1f) << 11;
+	*time = ((ts.sec >> 1) & 0x1f) | (ts.min & 0x3f) << 5 | (ts.hour & 0x1f) << 11;
 }
 
 //------------------------------------------------------------------------------
