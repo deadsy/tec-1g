@@ -185,9 +185,6 @@ static int8_t mml_next(struct mml_state *mml, struct mml_note *note) {
 				parse_number(&mml->song, &num);
 
 				int16_t midi = (int16_t) ((mml->octave + 1) * 12) + semitone;
-				if (midi < 0) {
-					midi = 0;
-				}
 				if (midi > MIDI_MAX) {
 					midi = MIDI_MAX;
 				}
