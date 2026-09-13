@@ -28,7 +28,7 @@ static void box_test(struct menu *m) {
 		}
 		c += 1;
 	}
-	array88_clear();
+	array88_init();
 }
 
 //-----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ static void vline_test(struct menu *m) {
 		}
 		c += 1;
 	}
-	array88_clear();
+	array88_init();
 }
 
 //-----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ static void hline_test(struct menu *m) {
 		}
 		c += 1;
 	}
-	array88_clear();
+	array88_init();
 }
 
 //-----------------------------------------------------------------------------
@@ -79,7 +79,7 @@ static void random_test(struct menu *m) {
 			array88_scan();
 		}
 	}
-	array88_clear();
+	array88_init();
 }
 
 //-----------------------------------------------------------------------------
@@ -204,7 +204,7 @@ static void life_run(void) {
 		}
 		life_step();
 	}
-	array88_clear();
+	array88_init();
 }
 
 static void life_random_test(struct menu *m) {
@@ -242,7 +242,7 @@ int main(void) {
 	key_init();
 	lcd_init();
 	menu_init();
-	array88_clear();
+	array88_init();
 
 	struct menu m;
 	menu_setup(&m, LCD_ROWS, LCD_COLS, root_items);

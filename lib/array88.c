@@ -15,24 +15,32 @@ Array88 Driver
 #define NUM_ROWS 8
 #define NUM_COLS 8
 
+// array state
 static uint8_t red[NUM_ROWS];
 static uint8_t green[NUM_ROWS];
 static uint8_t blue[NUM_ROWS];
 
 //-----------------------------------------------------------------------------
 
-void array88_clear(void) {
-	for (int8_t i = 0; i < NUM_ROWS; i++) {
-		red[i] = 0;
-		green[i] = 0;
-		blue[i] = 0;
-	}
+// initialise the 8x8 state
+void array88_init(void) {
+	array88_clear();
 	xr88Port = 0;
 	xg88Port = 0;
 	xb88Port = 0;
 	y88Port = 0;
 }
 
+// clear the array state
+void array88_clear(void) {
+	for (int8_t i = 0; i < NUM_ROWS; i++) {
+		red[i] = 0;
+		green[i] = 0;
+		blue[i] = 0;
+	}
+}
+
+// run a scan cycle
 void array88_scan(void) {
 	for (int8_t i = 0; i < 8; i++) {
 		xr88Port = red[i];
@@ -44,6 +52,7 @@ void array88_scan(void) {
 	}
 }
 
+// set an x,y pixel to a color
 void array88_plot(uint8_t x, uint8_t y, uint8_t color) {
 	x &= (NUM_COLS - 1);
 	y &= (NUM_ROWS - 1);
@@ -69,6 +78,7 @@ void array88_plot(uint8_t x, uint8_t y, uint8_t color) {
 	}
 }
 
+// draw a horizontal line x0,y .. x1,y
 void array88_hline(uint8_t x0, uint8_t x1, uint8_t y, uint8_t color) {
 	uint8_t x = x0;
 	while (x <= x1) {
@@ -77,6 +87,7 @@ void array88_hline(uint8_t x0, uint8_t x1, uint8_t y, uint8_t color) {
 	}
 }
 
+// draw a vertical line x,y0 .. x,y1
 void array88_vline(uint8_t y0, uint8_t y1, uint8_t x, uint8_t color) {
 	uint8_t y = y0;
 	while (y <= y1) {
@@ -85,6 +96,7 @@ void array88_vline(uint8_t y0, uint8_t y1, uint8_t x, uint8_t color) {
 	}
 }
 
+// draw a box
 void array88_box(uint8_t left, uint8_t bottom, uint8_t right, uint8_t top, uint8_t color) {
 	if ((left == right) && (top == bottom)) {
 		array88_plot(left, top, color);

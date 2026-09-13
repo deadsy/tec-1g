@@ -27,6 +27,7 @@ Array88 Driver
 
 //-----------------------------------------------------------------------------
 
+void array88_init(void);
 void array88_clear(void);
 void array88_scan(void);
 void array88_plot(uint8_t x, uint8_t y, uint8_t color);

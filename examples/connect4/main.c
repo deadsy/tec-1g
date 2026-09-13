@@ -299,8 +299,7 @@ static void connect4(struct menu *m) {
 	}
 
 	// turn off the display
-	array88_clear();
-	array88_scan();
+	array88_init();
 }
 
 //-----------------------------------------------------------------------------
@@ -321,7 +320,7 @@ int main(void) {
 	key_init();
 	lcd_init();
 	menu_init();
-	array88_clear();
+	array88_init();
 
 	struct menu m;
 	menu_setup(&m, LCD_ROWS, LCD_COLS, root_items);
