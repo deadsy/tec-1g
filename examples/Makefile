@@ -9,6 +9,7 @@ all:
 	make -C sdcard_test $@
 	make -C term_test $@
 	make -C sound_test $@
+	make -C connect4 $@
 
 .PHONY: clean
 clean:
@@ -21,3 +22,4 @@ clean:
 	make -C sdcard_test $@
 	make -C term_test $@
 	make -C sound_test $@
+	make -C connect4 $@

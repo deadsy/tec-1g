@@ -43,10 +43,7 @@ static void cmajor_test(struct menu *m) {
 //-----------------------------------------------------------------------------
 
 // "Ode to Joy" (Beethoven) as an MML string.
-static const char tune[] =
-    "T200 O4 L4 "
-    "E E F G G F E D C C D E E. D8 D2 "
-    "E E F G G F E D C C D E D. C8 C2";
+static const char tune[] = "T200 O4 L4 E E F G G F E D C C D E E. D8 D2 E E F G G F E D C C D E D. C8 C2";
 
 static void mml_test(struct menu *m) {
 	(void)m;

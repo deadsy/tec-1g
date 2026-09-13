@@ -9,6 +9,8 @@ FILES="
 ./examples/glcd_test/main.c
 ./examples/sdcard_test/main.c
 ./examples/term_test/main.c
+./examples/sound_test/main.c
+./examples/connect4/main.c
 ./include/array88.h
 ./include/delay.h
 ./include/display.h
