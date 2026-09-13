@@ -6,7 +6,7 @@ Connect 4 on the 8x8 RGB
 */
 //-----------------------------------------------------------------------------
 
-//#include <string.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include "array88.h"
@@ -32,10 +32,16 @@ Connect 4 on the 8x8 RGB
 #define HUMAN_WIN 2		// the human has won
 #define COMPUTER_WIN 3		// the computer has won
 
+// the eponymous number
+#define CONNECT 4
+
+// row value used to indicate game exit
+#define EXIT_ROW 0xff
+
 //-----------------------------------------------------------------------------
 
 static void delay_and_scan(void) {
-	for (uint8_t i = 0; i < 8; i++) {
+	for (uint8_t i = 0; i < 10; i++) {
 		array88_scan();
 	}
 }
@@ -117,20 +123,22 @@ static uint8_t drop(struct game_state *s, uint8_t col, uint8_t piece) {
 
 //-----------------------------------------------------------------------------
 
-// work out the start position for the / diagonal
-static void diag_bottom_left(uint8_t *col, uint8_t *row) {
-	while ((*row > 0) && (*col > 0)) {
-		*row--;
-		*col--;
+// starting at a position, count the cells of the same type in a direction.
+static uint8_t count_dirn(struct game_state *s, int8_t x, int8_t y, int8_t dx, int8_t dy) {
+	uint8_t player = s->cells[x][y];
+	uint8_t n = 0;
+	while (s->cells[x][y] == player) {
+		x += dx;
+		y += dy;
+		n++;
+		if ((x < 0) || (x >= GAME_COLS)) {
+			break;
+		}
+		if ((y < 0) || (y >= GAME_ROWS)) {
+			break;
+		}
 	}
-}
-
-// work out the start position for the \ diagonal
-static void diag_top_left(uint8_t *col, uint8_t *row) {
-	while ((*row < GAME_ROWS - 1) && (*col > 0)) {
-		*row++;
-		*col--;
-	}
+	return n;
 }
 
 //-----------------------------------------------------------------------------
@@ -138,89 +146,43 @@ static void diag_top_left(uint8_t *col, uint8_t *row) {
 // did we just get a win from a piece placed in this cell?
 static uint8_t game_won(struct game_state *s, uint8_t col, uint8_t row) {
 	uint8_t player = s->cells[col][row];
-	bool win = false;
-	int8_t n, x, y;
+	uint8_t n;
 
-	// check this row for a horizontal win
-	n = 0;
-	for (uint8_t i = 0; i < GAME_COLS; i++) {
-		if (s->cells[i][row] == player) {
-			n++;
-			if (n == 4) {
-				win = true;
-				break;
-			}
-		} else {
-			n = 0;
-		}
-	}
-	if (win) {
-		return (player == HUMAN) ? HUMAN_WIN : COMPUTER_WIN;
+	// note: we are double counting the starting col,row hence CONNECT + 1
+
+	// check the row for a horizontal win
+	n = count_dirn(s, col, row, 1, 0);
+	n += count_dirn(s, col, row, -1, 0);
+	if (n >= CONNECT + 1) {
+		goto winner;
 	}
 
-	// check this column for a vertical win
-	n = 0;
-	for (uint8_t i = 0; i < GAME_ROWS; i++) {
-		if (s->cells[col][i] == player) {
-			n++;
-			if (n == 4) {
-				win = true;
-				break;
-			}
-		} else {
-			n = 0;
-		}
-	}
-	if (win) {
-		return (player == HUMAN) ? HUMAN_WIN : COMPUTER_WIN;
+	// check the column for a vertical win
+	n = count_dirn(s, col, row, 0, 1);
+	n += count_dirn(s, col, row, 0, -1);
+	if (n >= CONNECT + 1) {
+		goto winner;
 	}
 
 	// check the diagonal / for a win
-	x = col;
-	y = row;
-	diag_bottom_left(&x, &y);
-	n = 0;
-	while ((x < GAME_COLS) && (y < GAME_ROWS)) {
-		if (s->cells[x][y] == player) {
-			n++;
-			if (n == 4) {
-				win = true;
-				break;
-			}
-		} else {
-			n = 0;
-		}
-		x++;
-		y++;
-	}
-	if (win) {
-		return (player == HUMAN) ? HUMAN_WIN : COMPUTER_WIN;
+	n = count_dirn(s, col, row, 1, 1);
+	n += count_dirn(s, col, row, -1, -1);
+	if (n >= CONNECT + 1) {
+		goto winner;
 	}
 
 	// check the diagonal \ for a win
-	x = col;
-	y = row;
-	diag_top_left(&x, &y);
-	n = 0;
-	while ((x < GAME_COLS) && (y >= 0)) {
-		if (s->cells[x][y] == player) {
-			n++;
-			if (n == 4) {
-				win = true;
-				break;
-			}
-		} else {
-			n = 0;
-		}
-		x++;
-		y--;
-	}
-	if (win) {
-		return (player == HUMAN) ? HUMAN_WIN : COMPUTER_WIN;
+	n = count_dirn(s, col, row, -1, 1);
+	n += count_dirn(s, col, row, 1, -1);
+	if (n >= CONNECT + 1) {
+		goto winner;
 	}
 
 	// no win yet...
 	return PLAYING;
+
+ winner:
+	return (player == HUMAN) ? HUMAN_WIN : COMPUTER_WIN;
 }
 
 // evaluate the game state
@@ -256,7 +218,7 @@ static uint8_t computer_turn(struct game_state *s) {
 //-----------------------------------------------------------------------------
 
 // run the player turn - return the row dropped to, or -1 for exit
-static int8_t player_turn(struct game_state *s) {
+static uint8_t player_turn(struct game_state *s) {
 	while (true) {
 		if (key_down()) {
 			switch (key_code()) {
@@ -272,7 +234,7 @@ static int8_t player_turn(struct game_state *s) {
 				}
 				break;
 			case KEYPAD_Address:
-				return -1;
+				return EXIT_ROW;
 			}
 		}
 		game_render(s);
@@ -295,8 +257,8 @@ static void connect4(struct menu *m) {
 	// game loop
 	uint8_t state = PLAYING;
 	while (true) {
-		int8_t row = player_turn(&s);
-		if (row < 0) {
+		uint8_t row = player_turn(&s);
+		if (row == EXIT_ROW) {
 			break;
 		}
 		state = game_evaluate(&s, s.player_col, row);
