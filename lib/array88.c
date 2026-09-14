@@ -3,6 +3,12 @@
 
 Array88 Driver
 
+Note:
+
+The bottom left of the display is (0,0)
+The top right of the display is (7,7)
+(x, y) == (col, row)
+
 */
 //-----------------------------------------------------------------------------
 
@@ -56,6 +62,10 @@ void array88_scan(void) {
 void array88_plot(uint8_t x, uint8_t y, uint8_t color) {
 	x &= (NUM_COLS - 1);
 	y &= (NUM_ROWS - 1);
+
+	// reverse to give 0,0 in the bottom left corner
+	x = NUM_COLS - 1 - x;
+	y = NUM_ROWS - 1 - y;
 
 	uint8_t xmask = 1 << x;
 
