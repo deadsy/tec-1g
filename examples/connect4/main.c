@@ -38,6 +38,9 @@ Connect 4 on the 8x8 RGB
 // row value used to indicate game exit
 #define EXIT_ROW 0xff
 
+// invalid column number
+#define NO_COLUMN 0xff
+
 //-----------------------------------------------------------------------------
 
 static void delay_and_scan(void) {
@@ -98,11 +101,11 @@ static bool can_drop(struct game_state *s, uint8_t col) {
 	return s->cells[col][GAME_ROWS - 1] == EMPTY;
 }
 
-// drop a piece on a column - return the row the piece drops to.
-static uint8_t drop(struct game_state *s, uint8_t col, uint8_t piece) {
-	// add the piece
+// drop a piece on a column (with animation) - return the row the player piece drops to.
+static uint8_t drop_animate(struct game_state *s, uint8_t col, uint8_t player) {
+	// add the player piece
 	uint8_t row = GAME_ROWS - 1;
-	s->cells[col][row] = piece;
+	s->cells[col][row] = player;
 	s->dirty = true;
 	// drop the piece
 	bool dropping = true;
@@ -111,7 +114,7 @@ static uint8_t drop(struct game_state *s, uint8_t col, uint8_t piece) {
 		delay_and_scan();
 		if ((row >= 1) && (s->cells[col][row - 1] == EMPTY)) {
 			s->cells[col][row--] = EMPTY;
-			s->cells[col][row] = piece;
+			s->cells[col][row] = player;
 			s->dirty = true;
 		} else {
 			dropping = false;
@@ -119,6 +122,23 @@ static uint8_t drop(struct game_state *s, uint8_t col, uint8_t piece) {
 
 	} while (dropping);
 	return row;
+}
+
+// drop a piece on a column - return the row the player piece drops to.
+static uint8_t drop(struct game_state *s, uint8_t col, uint8_t player) {
+	for (uint8_t row = 0; row < GAME_ROWS; row++) {
+		if (s->cells[col][row] == EMPTY) {
+			s->cells[col][row] = player;
+			return row;
+		}
+	}
+	// shouldn't get here...'
+	return 0;
+}
+
+// undo a drop, return the cell to empty
+static void undo_drop(struct game_state *s, uint8_t col, uint8_t row) {
+	s->cells[col][row] = EMPTY;
 }
 
 //-----------------------------------------------------------------------------
@@ -154,42 +174,55 @@ static uint8_t game_won(struct game_state *s, uint8_t col, uint8_t row) {
 	n = count_dirn(s, col, row, 1, 0);
 	n += count_dirn(s, col, row, -1, 0);
 	if (n >= CONNECT + 1) {
-		goto winner;
+		return player;
 	}
 
 	// check the column for a vertical win
 	n = count_dirn(s, col, row, 0, 1);
 	n += count_dirn(s, col, row, 0, -1);
 	if (n >= CONNECT + 1) {
-		goto winner;
+		return player;
 	}
 
 	// check the diagonal / for a win
 	n = count_dirn(s, col, row, 1, 1);
 	n += count_dirn(s, col, row, -1, -1);
 	if (n >= CONNECT + 1) {
-		goto winner;
+		return player;
 	}
 
 	// check the diagonal \ for a win
 	n = count_dirn(s, col, row, -1, 1);
 	n += count_dirn(s, col, row, 1, -1);
 	if (n >= CONNECT + 1) {
-		goto winner;
+		return player;
 	}
 
 	// no win yet...
-	return PLAYING;
+	return EMPTY;
+}
 
- winner:
-	return (player == HUMAN) ? HUMAN_WIN : COMPUTER_WIN;
+// return the number of winning moves the player has from the current game state.
+static uint8_t winning_moves(struct game_state *s, uint8_t player) {
+	uint8_t n = 0;
+	for (uint8_t col = 0; col < GAME_COLS; col++) {
+		if (!can_drop(s, col)) {
+			continue;
+		}
+		uint8_t row = drop(s, col, player);
+		if (game_won(s, col, row) == player) {
+			n += 1;
+		}
+		undo_drop(s, col, row);
+	}
+	return n;
 }
 
 // evaluate the game state
 static uint8_t game_evaluate(struct game_state *s, uint8_t col, uint8_t row) {
 	uint8_t win = game_won(s, col, row);
-	if (win != PLAYING) {
-		return win;
+	if (win != EMPTY) {
+		return (win == COMPUTER) ? COMPUTER_WIN : HUMAN_WIN;
 	}
 	// are we stuck?
 	for (uint8_t col = 0; col < GAME_COLS; col++) {
@@ -203,16 +236,74 @@ static uint8_t game_evaluate(struct game_state *s, uint8_t col, uint8_t row) {
 
 //-----------------------------------------------------------------------------
 
+#define SCORE_ILLEGAL -10000
+#define SCORE_COMPUTER_WIN 10000
+#define SCORE_HUMAN_WIN -1000
+#define SCORE_TWO_WIN 500
+#define SCORE_ONE_WIN 100
+
+static const uint8_t column_bias[GAME_COLS] = { 0, 2, 4, 8, 8, 4, 2, 0 };
+
+// return the score for a move made on this column
+static int16_t evaluate_move(struct game_state *s, uint8_t col) {
+	if (!can_drop(s, col)) {
+		// can't do it
+		return SCORE_ILLEGAL;
+	}
+
+	// can we win with this move?
+	uint8_t row = drop(s, col, COMPUTER);
+	if (game_won(s, col, row) == COMPUTER_WIN) {
+		undo_drop(s, col, row);
+		return SCORE_COMPUTER_WIN;
+	}
+
+	int16_t score = 0;
+
+	// does the human have a winning move?
+	if (winning_moves(s, HUMAN) > 0) {
+		score += SCORE_HUMAN_WIN;
+	}
+
+	// how many winning moves do I have?
+	uint8_t n = winning_moves(s, COMPUTER);
+	if (n >= 2) {
+		score += SCORE_TWO_WIN;
+	}
+	if (n == 1) {
+		score += SCORE_ONE_WIN;
+	}
+
+	// bias to central columns
+	score += column_bias[col];
+
+	undo_drop(s, col, row);
+
+	return score;
+}
+
+// column evaluate order- same scores give preference to center columns.
+static const uint8_t column_order[GAME_COLS] = { 3, 4, 2, 5, 1, 6, 0, 7 };
+
 // run the computer turn (a move is possible...), return the row dropped to.
 static uint8_t computer_turn(struct game_state *s) {
-	while (true) {
-		// sophistication...
-		uint8_t col = rand() % GAME_COLS;
-		if (can_drop(s, col)) {
-			s->computer_col = col;
-			return drop(s, col, COMPUTER);
+	int16_t best_score = -1;
+	uint8_t best_col = NO_COLUMN;
+
+	// evaluate each column
+	for (uint8_t i = 0; i < GAME_COLS; i++) {
+		uint8_t col = column_order[i];
+		array88_scan();
+		int16_t score = evaluate_move(s, col);
+		array88_scan();
+		if (score > best_score) {
+			best_score = score;
+			best_col = col;
 		}
 	}
+
+	s->computer_col = best_col;
+	return drop_animate(s, best_col, COMPUTER);
 }
 
 //-----------------------------------------------------------------------------
@@ -230,7 +321,7 @@ static uint8_t player_turn(struct game_state *s) {
 				break;
 			case KEYPAD_Go:
 				if (can_drop(s, s->player_col)) {
-					return drop(s, s->player_col, HUMAN);
+					return drop_animate(s, s->player_col, HUMAN);
 				}
 				break;
 			case KEYPAD_Address:
@@ -246,7 +337,7 @@ static uint8_t player_turn(struct game_state *s) {
 
 static void connect4(struct menu *m) {
 
-	srand(0x1234);
+	srand(0xace1);
 
 	lcd_clear();
 	lcd_puts(0, 0, "Playing...");
