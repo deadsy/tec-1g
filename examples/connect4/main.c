@@ -15,6 +15,7 @@ Connect 4 on the 8x8 RGB
 #include "keypad.h"
 #include "delay.h"
 #include "hw.h"
+#include "mml.h"
 
 #include "term.h"
 #include "glcd.h"
@@ -353,6 +354,10 @@ static uint8_t player_turn(struct game_state *s) {
 
 //-----------------------------------------------------------------------------
 
+static const char song_lose[] = "T140 O4 L8 G#4 G4 F#4 F4";
+static const char song_win[] = "T180 L8 O5 C E G O6 C4.";
+static const char song_draw[] = "T100 O4 L4 G A B L2 O5 D";
+
 static void connect4(struct menu *m) {
 
 	lcd_clear();
@@ -389,14 +394,17 @@ static void connect4(struct menu *m) {
 	case DRAW:
 		lcd_puts(0, 0, "Alright, we'll");
 		lcd_puts(1, 0, "call it a draw...");
+		mml_play(song_draw);
 		break;
 	case HUMAN_WIN:
 		lcd_puts(0, 0, "Look at you...");
 		lcd_puts(1, 0, "smarter than a Z80!");
+		mml_play(song_win);
 		break;
 	case COMPUTER_WIN:
 		lcd_puts(0, 0, "You lose,");
 		lcd_puts(1, 0, "monkey brain!");
+		mml_play(song_lose);
 		break;
 	}
 
