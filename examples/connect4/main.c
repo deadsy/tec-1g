@@ -7,7 +7,7 @@ Connect 4 on the 8x8 RGB
 //-----------------------------------------------------------------------------
 
 #include <string.h>
-#include <stdlib.h>
+#include <stdio.h>
 
 #include "array88.h"
 #include "menu.h"
@@ -15,6 +15,9 @@ Connect 4 on the 8x8 RGB
 #include "keypad.h"
 #include "delay.h"
 #include "hw.h"
+
+#include "term.h"
+#include "glcd.h"
 
 //-----------------------------------------------------------------------------
 
@@ -96,6 +99,9 @@ static void player_right(struct game_state *s) {
 	}
 }
 
+//-----------------------------------------------------------------------------
+// dropping the player pieces
+
 // can we drop a piece on this column?
 static bool can_drop(struct game_state *s, uint8_t col) {
 	return s->cells[col][GAME_ROWS - 1] == EMPTY;
@@ -119,7 +125,6 @@ static uint8_t drop_animate(struct game_state *s, uint8_t col, uint8_t player) {
 		} else {
 			dropping = false;
 		}
-
 	} while (dropping);
 	return row;
 }
@@ -142,6 +147,7 @@ static void undo_drop(struct game_state *s, uint8_t col, uint8_t row) {
 }
 
 //-----------------------------------------------------------------------------
+// game evaluation
 
 // starting at a position, count the cells of the same type in a direction.
 static uint8_t count_dirn(struct game_state *s, int8_t x, int8_t y, int8_t dx, int8_t dy) {
@@ -160,8 +166,6 @@ static uint8_t count_dirn(struct game_state *s, int8_t x, int8_t y, int8_t dx, i
 	}
 	return n;
 }
-
-//-----------------------------------------------------------------------------
 
 // did we just get a win from a piece placed in this cell?
 static uint8_t game_won(struct game_state *s, uint8_t col, uint8_t row) {
@@ -202,6 +206,17 @@ static uint8_t game_won(struct game_state *s, uint8_t col, uint8_t row) {
 	return EMPTY;
 }
 
+// is the game drawn? (no moves possible)
+static bool game_drawn(struct game_state *s) {
+	for (uint8_t col = 0; col < GAME_COLS; col++) {
+		if (can_drop(s, col)) {
+			// not stuck...
+			return false;
+		}
+	}
+	return true;
+}
+
 // return the number of winning moves the player has from the current game state.
 static uint8_t winning_moves(struct game_state *s, uint8_t player) {
 	uint8_t n = 0;
@@ -224,14 +239,11 @@ static uint8_t game_evaluate(struct game_state *s, uint8_t col, uint8_t row) {
 	if (win != EMPTY) {
 		return (win == COMPUTER) ? COMPUTER_WIN : HUMAN_WIN;
 	}
-	// are we stuck?
-	for (uint8_t col = 0; col < GAME_COLS; col++) {
-		if (can_drop(s, col)) {
-			// not stuck...
-			return PLAYING;
-		}
+	// are we drawn?
+	if (game_drawn(s)) {
+		return DRAW;
 	}
-	return DRAW;
+	return PLAYING;
 }
 
 //-----------------------------------------------------------------------------
@@ -253,7 +265,7 @@ static int16_t evaluate_move(struct game_state *s, uint8_t col) {
 
 	// can we win with this move?
 	uint8_t row = drop(s, col, COMPUTER);
-	if (game_won(s, col, row) == COMPUTER_WIN) {
+	if (game_won(s, col, row) == COMPUTER) {
 		undo_drop(s, col, row);
 		return SCORE_COMPUTER_WIN;
 	}
@@ -290,12 +302,18 @@ static uint8_t computer_turn(struct game_state *s) {
 	int16_t best_score = -1;
 	uint8_t best_col = NO_COLUMN;
 
+	char tmp[32];
+
 	// evaluate each column
 	for (uint8_t i = 0; i < GAME_COLS; i++) {
+
 		uint8_t col = column_order[i];
-		array88_scan();
 		int16_t score = evaluate_move(s, col);
-		array88_scan();
+
+		sprintf(tmp, "\n%d: %d", col, score);
+		term_puts(tmp);
+		term_flush();
+
 		if (score > best_score) {
 			best_score = score;
 			best_col = col;
@@ -336,8 +354,6 @@ static uint8_t player_turn(struct game_state *s) {
 //-----------------------------------------------------------------------------
 
 static void connect4(struct menu *m) {
-
-	srand(0xace1);
 
 	lcd_clear();
 	lcd_puts(0, 0, "Playing...");
@@ -412,6 +428,9 @@ int main(void) {
 	lcd_init();
 	menu_init();
 	array88_init();
+
+	glcd_init();
+	term_init(false, true);
 
 	struct menu m;
 	menu_setup(&m, LCD_ROWS, LCD_COLS, root_items);
