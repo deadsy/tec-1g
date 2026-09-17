@@ -47,14 +47,6 @@ Connect 4 on the 8x8 RGB
 
 //-----------------------------------------------------------------------------
 
-static void delay_and_scan(void) {
-	for (uint8_t i = 0; i < 10; i++) {
-		array88_scan();
-	}
-}
-
-//-----------------------------------------------------------------------------
-
 struct game_state {
 	bool dirty;		// display needs a refresh
 	uint8_t player_col;	// current player column 0..7
@@ -118,7 +110,7 @@ static uint8_t drop_animate(struct game_state *s, uint8_t col, uint8_t player) {
 	bool dropping = true;
 	do {
 		game_render(s);
-		delay_and_scan();
+		array88_scan(10);
 		if ((row >= 1) && (s->cells[col][row - 1] == EMPTY)) {
 			s->cells[col][row--] = EMPTY;
 			s->cells[col][row] = player;
@@ -348,7 +340,7 @@ static uint8_t player_turn(struct game_state *s) {
 			}
 		}
 		game_render(s);
-		array88_scan();
+		array88_scan(1);
 	}
 }
 
@@ -410,7 +402,7 @@ static void connect4(struct menu *m) {
 
 	// wait for exit
 	while (!key_exit()) {
-		array88_scan();
+		array88_scan(1);
 	}
 
 	// turn off the display

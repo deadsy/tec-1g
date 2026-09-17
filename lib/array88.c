@@ -37,6 +37,30 @@ void array88_init(void) {
 	y88Port = 0;
 }
 
+// run a single mux cycle
+void array88_mux(void) {
+	static uint8_t row_idx;
+	row_idx = (row_idx + 1) & (NUM_COLS - 1);
+	y88Port = 0;
+	xr88Port = red[row_idx];
+	xg88Port = green[row_idx];
+	xb88Port = blue[row_idx];
+	y88Port = 1 << row_idx;
+}
+
+// run some scan cycles
+void array88_scan(uint8_t cycles) {
+	while (cycles > 0) {
+		for (int8_t i = 0; i < 8; i++) {
+			array88_mux();
+			delay_1ms();
+		}
+		cycles--;
+	}
+}
+
+//-----------------------------------------------------------------------------
+
 // clear the array state
 void array88_clear(void) {
 	for (int8_t i = 0; i < NUM_ROWS; i++) {
@@ -46,16 +70,46 @@ void array88_clear(void) {
 	}
 }
 
-// run a scan cycle
-void array88_scan(void) {
-	for (int8_t i = 0; i < 8; i++) {
-		xr88Port = red[i];
-		xg88Port = green[i];
-		xb88Port = blue[i];
-		y88Port = 1 << i;
-		delay_1ms();
-		y88Port = 0;
+// shift the array pixels left
+void array88_shift_left(void) {
+	for (int8_t i = 0; i < NUM_ROWS; i++) {
+		red[i] <<= 1;
+		green[i] <<= 1;
+		blue[i] <<= 1;
+	};
+}
+
+// shift the array pixels right
+void array88_shift_right(void) {
+	for (int8_t i = 0; i < NUM_ROWS; i++) {
+		red[i] >>= 1;
+		green[i] >>= 1;
+		blue[i] >>= 1;
+	};
+}
+
+// shift the array pixels up
+void array88_shift_up(void) {
+	for (int8_t i = 0; i < NUM_ROWS - 1; i++) {
+		red[i] = red[i + 1];
+		green[i] = green[i + 1];
+		blue[i] = blue[i + 1];
 	}
+	red[NUM_ROWS - 1] = 0;
+	green[NUM_ROWS - 1] = 0;
+	blue[NUM_ROWS - 1] = 0;
+}
+
+// shift the array pixels down
+void array88_shift_down(void) {
+	for (int8_t i = NUM_ROWS - 1; i > 0; i--) {
+		red[i] = red[i - 1];
+		green[i] = green[i - 1];
+		blue[i] = blue[i - 1];
+	}
+	red[0] = 0;
+	green[0] = 0;
+	blue[0] = 0;
 }
 
 // set an x,y pixel to a color
