@@ -19,6 +19,7 @@ OBJS = array88.rel \
 	term.rel \
 	sound.rel \
 	mml.rel \
+	shuffle.rel \
 	delay.rel
 
 CFLAGS = -mz80 \

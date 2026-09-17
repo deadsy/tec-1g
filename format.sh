@@ -28,6 +28,7 @@ FILES="
 ./include/term.h
 ./include/sound.h
 ./include/mml.h
+./include/util.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -44,6 +45,7 @@ FILES="
 ./lib/term.c
 ./lib/sound.c
 ./lib/mml.c
+./lib/shuffle.c
 "
 
 for f in $FILES; do

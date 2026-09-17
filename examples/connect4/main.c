@@ -8,6 +8,7 @@ Connect 4 on the 8x8 RGB
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "array88.h"
 #include "menu.h"
@@ -16,6 +17,7 @@ Connect 4 on the 8x8 RGB
 #include "delay.h"
 #include "hw.h"
 #include "mml.h"
+#include "util.h"
 
 #include "term.h"
 #include "glcd.h"
@@ -48,23 +50,18 @@ Connect 4 on the 8x8 RGB
 //-----------------------------------------------------------------------------
 
 struct game_state {
-	bool dirty;		// display needs a refresh
 	uint8_t player_col;	// current player column 0..7
 	uint8_t computer_col;	// current computer column 0..7
 	uint8_t cells[GAME_COLS][GAME_ROWS];
 };
 
 static void game_init(struct game_state *s) {
-	memset(s, 0, sizeof(struct game_state));
+	memset(s, EMPTY, sizeof(struct game_state));
 	s->player_col = 0;
-	s->dirty = true;
 }
 
 static void game_render(struct game_state *s) {
-	if (!s->dirty) {
-		return;
-	}
-	array88_clear();
+	array88_fill(EMPTY);
 	// player position
 	array88_plot(s->player_col, 0, BLUE);
 	// display the cells
@@ -72,23 +69,6 @@ static void game_render(struct game_state *s) {
 		for (int8_t row = 0; row < GAME_ROWS; row++) {
 			array88_plot(col, row + 1, s->cells[col][row]);
 		}
-	}
-	s->dirty = false;
-}
-
-// move the player left
-static void player_left(struct game_state *s) {
-	if (s->player_col > 0) {
-		s->player_col--;
-		s->dirty = true;
-	}
-}
-
-// move the player right
-static void player_right(struct game_state *s) {
-	if (s->player_col < (GAME_COLS - 1)) {
-		s->player_col++;
-		s->dirty = true;
 	}
 }
 
@@ -105,7 +85,6 @@ static uint8_t drop_animate(struct game_state *s, uint8_t col, uint8_t player) {
 	// add the player piece
 	uint8_t row = GAME_ROWS - 1;
 	s->cells[col][row] = player;
-	s->dirty = true;
 	// drop the piece
 	bool dropping = true;
 	do {
@@ -114,7 +93,6 @@ static uint8_t drop_animate(struct game_state *s, uint8_t col, uint8_t player) {
 		if ((row >= 1) && (s->cells[col][row - 1] == EMPTY)) {
 			s->cells[col][row--] = EMPTY;
 			s->cells[col][row] = player;
-			s->dirty = true;
 		} else {
 			dropping = false;
 		}
@@ -240,6 +218,7 @@ static uint8_t game_evaluate(struct game_state *s, uint8_t col, uint8_t row) {
 }
 
 //-----------------------------------------------------------------------------
+// computer move
 
 #define SCORE_ILLEGAL -10000
 #define SCORE_COMPUTER_WIN 10000
@@ -287,25 +266,31 @@ static int16_t evaluate_move(struct game_state *s, uint8_t col) {
 	return score;
 }
 
-// column evaluate order- same scores give preference to center columns.
-static const uint8_t column_order[GAME_COLS] = { 3, 4, 2, 5, 1, 6, 0, 7 };
-
 // run the computer turn (a move is possible...), return the row dropped to.
 static uint8_t computer_turn(struct game_state *s) {
-	int16_t best_score = -1;
+	int16_t best_score = INT16_MIN;
 	uint8_t best_col = NO_COLUMN;
 
 	char tmp[32];
 
+	// create a column search order array (random shuffle)
+	// In the event two scores are the same the first column
+	// in the search order will be chosen. This helps stop
+	// the computer being predictable.
+	uint8_t order[GAME_COLS] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+	shuffle(order, GAME_COLS);
+
+	// whilst I think...
+	array88_blank();
+
 	// evaluate each column
 	for (uint8_t i = 0; i < GAME_COLS; i++) {
 
-		uint8_t col = column_order[i];
+		uint8_t col = order[i];
 		int16_t score = evaluate_move(s, col);
 
 		sprintf(tmp, "\n%d: %d", col, score);
 		term_puts(tmp);
-		term_flush();
 
 		if (score > best_score) {
 			best_score = score;
@@ -313,22 +298,44 @@ static uint8_t computer_turn(struct game_state *s) {
 		}
 	}
 
+	term_flush();
+
 	s->computer_col = best_col;
 	return drop_animate(s, best_col, COMPUTER);
 }
 
 //-----------------------------------------------------------------------------
+// player move
+
+// move the player left
+static bool player_left(struct game_state *s) {
+	if (s->player_col > 0) {
+		s->player_col--;
+		return true;
+	}
+	return false;
+}
+
+// move the player right
+static bool player_right(struct game_state *s) {
+	if (s->player_col < (GAME_COLS - 1)) {
+		s->player_col++;
+		return true;
+	}
+	return false;
+}
 
 // run the player turn - return the row dropped to, or -1 for exit
 static uint8_t player_turn(struct game_state *s) {
+	bool dirty = true;
 	while (true) {
 		if (key_down()) {
 			switch (key_code()) {
 			case KEYPAD_Minus:
-				player_left(s);
+				dirty = player_left(s);
 				break;
 			case KEYPAD_Plus:
-				player_right(s);
+				dirty = player_right(s);
 				break;
 			case KEYPAD_Go:
 				if (can_drop(s, s->player_col)) {
@@ -339,16 +346,19 @@ static uint8_t player_turn(struct game_state *s) {
 				return EXIT_ROW;
 			}
 		}
-		game_render(s);
+		if (dirty) {
+			game_render(s);
+			dirty = false;
+		}
 		array88_scan(1);
 	}
 }
 
 //-----------------------------------------------------------------------------
 
-static const char song_lose[] = "T140 O4 L8 G#4 G4 F#4 F4";
-static const char song_win[] = "T180 L8 O5 C E G O6 C4.";
-static const char song_draw[] = "T100 O4 L4 G A B L2 O5 D";
+//static const char song_lose[] = "T140 O4 L8 G#4 G4 F#4 F4";
+//static const char song_win[] = "T180 L8 O5 C E G O6 C4.";
+//static const char song_draw[] = "T100 O4 L4 G A B L2 O5 D";
 
 static void connect4(struct menu *m) {
 
@@ -386,17 +396,17 @@ static void connect4(struct menu *m) {
 	case DRAW:
 		lcd_puts(0, 0, "Alright, we'll");
 		lcd_puts(1, 0, "call it a draw...");
-		mml_play(song_draw);
+		//mml_play(song_draw);
 		break;
 	case HUMAN_WIN:
 		lcd_puts(0, 0, "Look at you...");
 		lcd_puts(1, 0, "smarter than a Z80!");
-		mml_play(song_win);
+		//mml_play(song_win);
 		break;
 	case COMPUTER_WIN:
 		lcd_puts(0, 0, "You lose,");
 		lcd_puts(1, 0, "monkey brain!");
-		mml_play(song_lose);
+		//mml_play(song_lose);
 		break;
 	}
 
@@ -405,8 +415,14 @@ static void connect4(struct menu *m) {
 		array88_scan(1);
 	}
 
+	// drop the pieces
+	for (uint8_t i = 0; i < 8; i++) {
+		array88_scan(10);
+		array88_shift_down();
+	}
+
 	// turn off the display
-	array88_init();
+	array88_blank();
 }
 
 //-----------------------------------------------------------------------------
@@ -424,6 +440,9 @@ static const struct menu_item root_items[] = {
 //-----------------------------------------------------------------------------
 
 int main(void) {
+
+	srand(0xcafe);
+
 	key_init();
 	lcd_init();
 	menu_init();

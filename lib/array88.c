@@ -28,9 +28,8 @@ static uint8_t blue[NUM_ROWS];
 
 //-----------------------------------------------------------------------------
 
-// initialise the 8x8 state
-void array88_init(void) {
-	array88_clear();
+// blank (turn off) the 8x8 display
+void array88_blank(void) {
 	xr88Port = 0;
 	xg88Port = 0;
 	xb88Port = 0;
@@ -39,13 +38,13 @@ void array88_init(void) {
 
 // run a single mux cycle
 void array88_mux(void) {
-	static uint8_t row_idx;
-	row_idx = (row_idx + 1) & (NUM_COLS - 1);
+	static uint8_t i;
+	i = (i + 1) & (NUM_COLS - 1);
 	y88Port = 0;
-	xr88Port = red[row_idx];
-	xg88Port = green[row_idx];
-	xb88Port = blue[row_idx];
-	y88Port = 1 << row_idx;
+	xr88Port = red[i];
+	xg88Port = green[i];
+	xb88Port = blue[i];
+	y88Port = 1 << i;
 }
 
 // run some scan cycles
@@ -59,14 +58,22 @@ void array88_scan(uint8_t cycles) {
 	}
 }
 
+// initialise the 8x8 state
+void array88_init(void) {
+	array88_fill(BLACK);
+	array88_blank();
+}
+
 //-----------------------------------------------------------------------------
 
-// clear the array state
-void array88_clear(void) {
+void array88_fill(uint8_t color) {
+	uint8_t r = (color & RED) ? 0xff : 0;
+	uint8_t g = (color & GREEN) ? 0xff : 0;
+	uint8_t b = (color & BLUE) ? 0xff : 0;
 	for (int8_t i = 0; i < NUM_ROWS; i++) {
-		red[i] = 0;
-		green[i] = 0;
-		blue[i] = 0;
+		red[i] = r;
+		green[i] = g;
+		blue[i] = b;
 	}
 }
 
