@@ -220,6 +220,74 @@ static uint8_t game_evaluate(struct game_state *s, uint8_t col, uint8_t row) {
 //-----------------------------------------------------------------------------
 // computer move
 
+#define SCORE_WIN 100
+#define SCORE_DRAW 0
+
+static int8_t max_int8(int8_t a, int8_t b) {
+	return (a > b) ? a : b;
+}
+
+static int8_t min_int8(int8_t a, int8_t b) {
+	return (a < b) ? a : b;
+}
+
+static int8_t game_score(struct game_state *s, bool player) {
+	(void)s;
+	(void)player;
+	// TODO
+	return 0;
+}
+
+static int8_t minimax(struct game_state *s, uint8_t depth, bool player) {
+	if (depth == 0) {
+		return game_score(s, player);
+	}
+	int8_t score, move_score;
+	if (player) {
+		// computer, return the max score
+		score = INT8_MIN;
+		for (uint8_t col = 0; col < GAME_COLS; col++) {
+			if (!can_drop(s, col)) {
+				continue;
+			}
+			uint8_t row = drop(s, col, COMPUTER);
+			if (game_won(s, col, row) != EMPTY) {
+				move_score = SCORE_WIN;
+			} else if (game_drawn(s)) {
+				move_score = SCORE_DRAW;
+			} else {
+				// recurse
+				move_score = minimax(s, depth - 1, false);
+			}
+			undo_drop(s, col, row);
+			score = max_int8(score, move_score);
+		}
+	} else {
+		// human, return the min score
+		score = INT8_MAX;
+		for (uint8_t col = 0; col < GAME_COLS; col++) {
+			if (!can_drop(s, col)) {
+				continue;
+			}
+			uint8_t row = drop(s, col, HUMAN);
+			if (game_won(s, col, row) != EMPTY) {
+				move_score = -SCORE_WIN;
+			} else if (game_drawn(s)) {
+				move_score = -SCORE_DRAW;
+			} else {
+				// recurse
+				move_score = minimax(s, depth - 1, true);
+			}
+			undo_drop(s, col, row);
+			score = min_int8(score, move_score);
+		}
+	}
+	return score;
+}
+
+//-----------------------------------------------------------------------------
+// computer move
+
 #define SCORE_ILLEGAL -10000
 #define SCORE_COMPUTER_WIN 10000
 #define SCORE_HUMAN_WIN -1000
