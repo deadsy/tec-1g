@@ -10,6 +10,7 @@ all:
 	make -C term_test $@
 	make -C sound_test $@
 	make -C connect4 $@
+	make -C serial_test $@
 
 .PHONY: clean
 clean:
@@ -23,3 +24,4 @@ clean:
 	make -C term_test $@
 	make -C sound_test $@
 	make -C connect4 $@
+	make -C serial_test $@

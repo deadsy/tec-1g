@@ -11,6 +11,7 @@ FILES="
 ./examples/term_test/main.c
 ./examples/sound_test/main.c
 ./examples/connect4/main.c
+./examples/serial_test/main.c
 ./include/array88.h
 ./include/delay.h
 ./include/display.h
@@ -29,6 +30,7 @@ FILES="
 ./include/sound.h
 ./include/mml.h
 ./include/util.h
+./include/serial.h
 ./lib/array88.c
 ./lib/delay.c
 ./lib/display.c
@@ -46,6 +48,7 @@ FILES="
 ./lib/sound.c
 ./lib/mml.c
 ./lib/shuffle.c
+./lib/serial.c
 "
 
 for f in $FILES; do
